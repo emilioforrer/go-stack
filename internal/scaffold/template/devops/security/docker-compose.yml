@@ -1,0 +1,147 @@
+services:
+  # Init container to download the dependency-check plugin
+  sonarqube-plugin-downloader:
+    profiles: [services]
+    image: alpine:latest
+    volumes:
+      - sonarqube-plugins:/plugins
+    command: >
+      sh -c "
+        apk add --no-cache wget &&
+        cd /plugins &&
+        if [ ! -f sonar-dependency-check-plugin-*.jar ]; then
+          echo 'Downloading SonarQube Dependency Check plugin...' &&
+          wget -O sonar-dependency-check-plugin-6.0.0.jar https://github.com/dependency-check/dependency-check-sonar-plugin/releases/download/6.0.0/sonar-dependency-check-plugin-6.0.0.jar &&
+          echo 'Plugin downloaded successfully'
+        else
+          echo 'Plugin already exists, skipping download'
+        fi
+      "
+
+  sonarqube:
+    profiles: [services]
+    image: sonarqube:latest
+    ports:
+      - "9000:9000"
+    # networks:
+    #   - sonar-network
+    volumes:
+      - sonarqube-plugins:/opt/sonarqube/extensions/plugins
+      - sonarqube-data:/opt/sonarqube/data
+      - sonarqube-logs:/opt/sonarqube/logs
+      - sonarqube-conf:/opt/sonarqube/conf
+    environment:
+      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
+    depends_on:
+      - sonarqube-plugin-downloader
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/api/system/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  sonar-scanner:
+    profiles: [tools]
+    image: sonarsource/sonar-scanner-cli
+    env_file:
+      - ./.env
+    volumes:
+      - ../../:/usr/src
+      - ./coverage:/usr/src/coverage
+    working_dir: /usr/src
+    command: >
+      sonar-scanner -X
+
+    # depends_on:
+    #   sonarqube:
+    #     condition: service_healthy
+    # networks:
+    #   - sonar-network
+  
+  trivy:
+    profiles: [tools]
+    image: aquasec/trivy:latest
+    env_file:
+      - ./.env
+    volumes:
+      - ../../:/workspace
+      - trivy-cache:/root/.cache/trivy
+    working_dir: /workspace
+    command: fs --skip-version-check --scanners vuln,misconfig,secret -f sarif -o devops/security/trivy-reports/trivy-results.sarif --skip-dirs "apm_modules,.claude,.github,.opencode,devops" --skip-files "app,**/coverage.out,go.sum,go.work.sum" .
+    # networks:
+    #   - sonar-network
+
+  grype:
+    profiles: [tools]
+    image: anchore/grype:latest
+    environment:
+      GRYPE_DB_CACHE_DIR: /grype-db
+    env_file:
+      - ./.env
+    volumes:
+      - ../../:/workspace
+      - grype-cache:/grype-db
+    working_dir: /workspace
+    command: dir:/workspace -o sarif --file devops/security/grype-reports/grype-results.sarif --exclude './apm_modules/**' --exclude './.claude/**' --exclude './.github/**' --exclude './.opencode/**' --exclude './devops/**'
+    # networks:
+    #   - sonar-network
+
+  snyk:
+    profiles: [tools]
+    image: snyk/snyk:golang # https://hub.docker.com/r/snyk/snyk
+    env_file:
+      - ./.env
+    volumes:
+      - ../../:/workspace
+    working_dir: /workspace
+    command: ["snyk test --all-projects --json-file-output=devops/security/snyk-reports/snyk-results.json --sarif-file-output=devops/security/snyk-reports/snyk-results.sarif --exclude=apm_modules --exclude=.claude --exclude=.github --exclude=.opencode --exclude=devops . || true && snyk code test --all-projects --json-file-output=devops/security/snyk-reports/snyk-code-results.json --sarif-file-output=devops/security/snyk-reports/snyk-code-results.sarif --exclude=apm_modules --exclude=.claude --exclude=.github --exclude=.opencode --exclude=devops . || true"]
+    # networks:
+    #   - sonar-network
+
+  cli-agents:
+    profiles: [tools]
+    build:
+      context: ./cli-agents
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+      - "4096:4096" # kilo web
+    tty: true
+    stdin_open: true
+    command: >
+      bash -c "zellij web --create-token && zellij -s docker web --port 8082 --ip 0.0.0.0 --cert /home/appuser/cert.pem --key /home/appuser/key.pem"
+    working_dir: /workspace
+    env_file:
+      - ./.env
+    volumes:
+      - ../../:/workspace
+
+  sonar-cli:
+    profiles: [tools]
+    build:
+      context: ./cli
+      dockerfile: Dockerfile
+    env_file:
+      - ./.env
+    volumes:
+      - ./sonar-reports:/app/reports
+      - ../../:/workspace
+    working_dir: /app
+    # Default behavior: uses environment variables SONAR_HOST_URL, SONAR_TOKEN, SONAR_PROJECT_KEY
+    # Override with: docker-compose run sonar-cli issues <url> <token> <project-key>
+    # Or any other command: docker-compose run sonar-cli --help
+    # networks:
+    #   - sonar-network
+
+# networks:
+#   sonar-network:
+#     driver: bridge
+
+volumes:
+  sonarqube-plugins:
+  sonarqube-data:
+  sonarqube-logs:
+  sonarqube-conf:
+  grype-cache:
+  trivy-cache:

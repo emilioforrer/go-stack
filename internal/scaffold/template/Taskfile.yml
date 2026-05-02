@@ -1,0 +1,128 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: '3'
+
+tasks:
+  linter:
+    desc: Run linters
+    cmds:
+      - golangci-lint run -c .golangci.yml --output.checkstyle.path=devops/reports/golangci-lint-report.xml ./...
+    silent: true
+
+  release:
+    desc: Run goreleaser
+    cmds:
+      - goreleaser release --clean
+    silent: true
+
+  release:snapshot:
+    desc: Run goreleaser snapshot (no publish)
+    cmds:
+      - goreleaser release --snapshot --clean
+    silent: true
+
+  test:
+    desc: Run tests
+    cmds:
+      - go test ./... -timeout 5m
+    silent: true
+
+  ci:
+    desc: Run CI pipeline (linter, test, coverage, release)
+    cmds:
+      - task: linter
+      - task: govet
+      - task: test
+      - task: test:report
+      - task: test:coverage
+      - task: release
+    silent: true
+
+  test:coverage:
+    desc: Run tests with coverage
+    cmds:
+      - go test ./... -timeout 5m -coverprofile=devops/reports/profile.out -covermode=atomic
+      - go tool cover -func=devops/reports/profile.out
+    silent: true
+
+  govet:
+    desc: Run go vet
+    cmds:
+      - go vet ./... 2> devops/reports/govet-report.out
+    silent: true
+
+  test:report:
+    desc: Run tests with JSON output
+    cmds:
+      - go test -json ./... -timeout 5m > devops/reports/tests-report.json
+    silent: true
+
+  run:local:serve:
+    desc: Run the application locally with the serve subcommand
+    cmds:
+      - go run ./cmd/app serve {{.CLI_ARGS}}
+    silent: true
+
+  mod:replace:drop:
+    desc: Drop local replace directives from go.mod
+    cmds:
+      - go mod edit -dropreplace=github.com/emilioforrer/go-stack/pkg/boot
+      - go mod edit -dropreplace=github.com/emilioforrer/go-stack/pkg/httpsvr
+    silent: true
+
+  mod:replace:add:
+    desc: Add local replace directives back to go.mod
+    cmds:
+      - go mod edit -replace=github.com/emilioforrer/go-stack/pkg/boot=../../../pkg/boot
+      - go mod edit -replace=github.com/emilioforrer/go-stack/pkg/httpsvr=../../../pkg/httpsvr
+    silent: true
+
+  mod:rename:
+    desc: Rename the module in go.mod
+    cmds:
+      - go mod edit -module={{.CLI_ARGS}}
+    silent: true
+
+  sonarqube:start:
+    desc: Start SonarQube server
+    cmds:
+      - docker-compose -f devops/security/docker-compose.yml --profile services up -d
+    silent: true
+
+  sonarqube:stop:
+    desc: Stop SonarQube server
+    cmds:
+      - docker-compose -f devops/security/docker-compose.yml --profile services down
+    silent: true
+
+  security:trivy:
+    desc: Scan the project for vulnerabilities with Trivy
+    cmds:
+      - docker-compose -f devops/security/docker-compose.yml --profile tools run trivy
+    silent: true
+
+  security:grype:
+    desc: Scan the project for vulnerabilities with Grype
+    cmds:
+      - docker-compose -f devops/security/docker-compose.yml --profile tools run grype
+    silent: true
+
+  security:snyk:
+    desc: Scan the project for vulnerabilities with Snyk
+    cmds:
+      - docker-compose -f devops/security/docker-compose.yml --profile tools run snyk
+    silent: true
+
+  sonarqube:scan:
+    desc: Run SonarQube scanner
+    cmds:
+      - docker-compose -f devops/security/docker-compose.yml --profile tools run sonar-scanner
+    silent: true
+
+  security:scan:
+    desc: Run all security scans (Trivy, Grype, Snyk)
+    cmds:
+      - task: security:trivy
+      - task: security:grype
+      - task: security:snyk
+    silent: true

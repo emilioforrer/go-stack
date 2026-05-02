@@ -1,0 +1,6 @@
+*.out
+.env
+
+# APM dependencies
+apm_modules/
+/app

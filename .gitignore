@@ -1,0 +1,9 @@
+*.out
+.env
+coverage.html
+
+# APM dependencies
+apm_modules/
+tmp
+/go-stack
+*.tar.gz

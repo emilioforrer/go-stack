@@ -1,0 +1,130 @@
+version: "2"
+run:
+  concurrency: 4
+  tests: true
+  allow-parallel-runners: true
+  skip-dirs:
+    - apm_modules
+linters:
+  enable:
+    - cyclop
+    - dogsled
+    - dupl
+    - err113
+    - errname
+    - errorlint
+    - exhaustive
+    - forbidigo
+    - forcetypeassert
+    - funlen
+    - gochecknoinits
+    - gocognit
+    - goconst
+    - gocritic
+    - godox
+    - gomodguard_v2
+    - goprintffuncname
+    - gosec
+    - lll
+    - makezero
+    - nakedret
+    - noctx
+    - nolintlint
+    - paralleltest
+    - prealloc
+    - predeclared
+    - revive
+    - rowserrcheck
+    - staticcheck
+    - thelper
+    - unconvert
+    - unparam
+    - whitespace
+    # - wsl_v5
+    # - wsl # deprecated (since v2.2.0)
+  disable:
+    - depguard
+    - mnd  # Disable magic number detector (temporary)
+    - wsl
+  settings:
+    cyclop:
+      max-complexity: 15
+    dupl:
+      threshold: 100
+    forbidigo:
+      forbid:
+        - pattern: fmt.Print
+        - pattern: fmt.Println
+        - pattern: fmt.Printf
+    gocognit:
+      min-complexity: 25
+    govet:
+      enable-all: true
+      disable:
+      - fieldalignment  # Disable field alignment check (temporary)
+    lll:
+      line-length: 160
+    revive:
+      rules:
+        - name: package-comments
+          disabled: true
+    staticcheck:
+      checks:
+        - all
+        - -ST1000 # Disable package comment requirement
+        # - -ST1003 # Disable should not use underscores in package names (temporary)
+    # wsl:
+    #   allow-cuddle-declarations: true
+  exclusions:
+    generated: lax
+    rules:
+      - linters:
+          - typecheck
+        path: apm_modules
+      # - path: (.+)\.go$
+      #   text: Error return value.*is not checked # Disable cognitive complexity check (temporary)
+      # - path: (.+)\.go$
+      #   text: cyclomatic complexity # Disable cognitive complexity check (temporary)
+      # - path: (.+)\.go$
+      #   text: cognitive complexity # Disable cognitive complexity check (temporary)
+      # - path: (.+)\.go$
+      #   text: Function '.+' is too long # Disable cognitive complexity check (temporary)
+      # - path: (.+)\.go$
+      #   text: Function '.+' has too many statements # Disable cognitive complexity check (temporary)
+      # - path: (.+)\.go$
+      #   text: do not define dynamic errors, use wrapped static errors instead # Disable error handling check (temporary)
+      # - path: (.+)\.go$
+      #   text: duplicate of.* # Disable duplicate code check (temporary)
+      - path: _test\.go$
+        text: ".*"
+    paths:
+      - vendor
+      - third_party$
+      - builtin$
+      - examples$
+      - migrations$
+      - ".*migrations.*"
+      - ".*node_modules.*"
+      - ".*tmp.*"
+      - apm_modules
+      - apm_modules
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    gofmt:
+      simplify: true
+  exclusions:
+    generated: lax
+    paths:
+      - vendor
+      - third_party$
+      - builtin$
+      - examples$
+      - migrations$
+      - ".*migrations.*"
+      - ".*node_modules.*"
+      - ".*tmp.*"
+      - apm_modules

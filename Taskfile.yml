@@ -1,0 +1,39 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: '3'
+
+includes:
+  boot:
+    taskfile: ./pkg/boot/Taskfile.yml
+    dir: ./pkg/boot
+  httpsvr:
+    taskfile: ./pkg/httpsvr/Taskfile.yml
+    dir: ./pkg/httpsvr
+  template:
+    taskfile: ./internal/scaffold/template/Taskfile.yml
+    dir: ./internal/scaffold/template
+
+tasks:
+  linter:
+    desc: Run linters
+    cmds:
+      - task: boot:linter
+      - task: httpsvr:linter
+      - task: template:linter
+    silent: true
+
+  test:
+    desc: Run tests
+    cmds:
+      - task: boot:test
+      - task: httpsvr:test
+      - task: template:test
+    silent: true
+
+  test:coverage:
+    desc: Run tests with coverage report
+    cmds:
+      - task: boot:test:coverage
+      - task: httpsvr:test:coverage
+      - task: template:test:coverage
+    silent: true

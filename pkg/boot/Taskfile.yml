@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: '3'
+
+tasks:
+  linter:
+    desc: Run linters
+    cmds:
+      - golangci-lint run -c ../../.golangci.yml ./...
+    silent: true
+
+  test:
+    desc: Run tests
+    cmds:
+      - go test -count=1 -timeout 30s -race ./...
+    silent: true
+
+  test:coverage:
+    desc: Run tests with coverage report
+    cmds:
+      - go test -count=1 -timeout 30s -coverprofile=coverage.out -covermode=atomic ./...
+      - go tool cover -func=coverage.out
+    silent: true

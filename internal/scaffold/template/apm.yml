@@ -1,0 +1,14 @@
+name: go-stack-template
+version: 1.0.0
+description: APM project for template
+author: Emilio Forrer
+dependencies:
+  apm:
+  - github.com/JetBrains/go-modern-guidelines/claude/modern-go-guidelines/skills/use-modern-go
+  - github.com/affaan-m/everything-claude-code/skills/postgres-patterns
+  - github.com/affaan-m/everything-claude-code/skills/golang-patterns
+  - github.com/affaan-m/everything-claude-code/skills/golang-testing
+  - github.com/samber/cc-skills-golang
+  mcp: []
+includes: auto
+scripts: {}
