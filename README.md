@@ -9,6 +9,7 @@ Each package lives under `pkg/` as an independent Go module that can be imported
 | Package | Description | Install |
 |---|---|---|
 | [boot](pkg/boot/README.md) | Application bootstrapping and lifecycle management built on top of [samber/do](https://github.com/samber/do) dependency injection. | `go get github.com/emilioforrer/go-stack/pkg/boot` |
+| [httpsvr](pkg/httpsvr/README.md) | HTTP server package built on `net/http` with structured router, configurable server, middleware chaining, and JSON error responses. | `go get github.com/emilioforrer/go-stack/pkg/httpsvr` |
 
 ## Tools
 
