@@ -8,18 +8,16 @@ tool (
 	github.com/goreleaser/goreleaser/v2
 )
 
-replace (
-	github.com/emilioforrer/go-stack/pkg/boot => ../../../pkg/boot
-	github.com/emilioforrer/go-stack/pkg/httpsvr => ../../../pkg/httpsvr
-)
-
 require (
 	github.com/danielgtaylor/huma/v2 v2.37.3
-	github.com/emilioforrer/go-stack/pkg/boot v0.0.0-00010101000000-000000000000
-	github.com/emilioforrer/go-stack/pkg/httpsvr v0.0.0-00010101000000-000000000000
 	github.com/samber/do/v2 v2.0.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
+)
+
+require (
+	github.com/emilioforrer/go-stack/pkg/boot v0.0.0-20260502190003-d68136ac4122
+	github.com/emilioforrer/go-stack/pkg/httpsvr v0.0.0-20260502190003-d68136ac4122
 )
 
 require (

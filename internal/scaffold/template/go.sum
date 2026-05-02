@@ -471,6 +471,10 @@ github.com/dustin/go-humanize v1.0.1 h1:GzkhY7T5VNhEkwH0PVJgjz+fX1rhBrR7pRT3mDkp
 github.com/dustin/go-humanize v1.0.1/go.mod h1:Mu1zIs6XwVuF/gI1OepvI0qD18qycQx+mFykh5fBlto=
 github.com/elazarl/goproxy v1.7.2 h1:Y2o6urb7Eule09PjlhQRGNsqRfPmYI3KKQLFpCAV3+o=
 github.com/elazarl/goproxy v1.7.2/go.mod h1:82vkLNir0ALaW14Rc399OTTjyNREgmdL2cVoIbS6XaE=
+github.com/emilioforrer/go-stack/pkg/boot v0.0.0-20260502190003-d68136ac4122 h1:xXFClRsCpqCq7KvQUsi0f4cFxeCDahBaDTngoDtcIxg=
+github.com/emilioforrer/go-stack/pkg/boot v0.0.0-20260502190003-d68136ac4122/go.mod h1:T/K2skQ+01KXt2akf6JTDDfC0W8cduQaPCXJWucoA5E=
+github.com/emilioforrer/go-stack/pkg/httpsvr v0.0.0-20260502190003-d68136ac4122 h1:3f7NfQFqRYx4VEmuzp6/rhLtldmIHQv7pfQloNFOUu0=
+github.com/emilioforrer/go-stack/pkg/httpsvr v0.0.0-20260502190003-d68136ac4122/go.mod h1:PHgAqmd7fqCniy6t8tDddtL4MK+ZghKGYZIRrXLdqvk=
 github.com/emirpasic/gods v1.18.1 h1:FXtiHYKDGKCW2KzwZKx0iC0PQmdlorYgdFG9jPXJ1Bc=
 github.com/emirpasic/gods v1.18.1/go.mod h1:8tpGGwCnJ5H4r6BWwaV6OrWmMoPhUl5jm/FMNAnJvWQ=
 github.com/envoyproxy/go-control-plane v0.14.0 h1:hbG2kr4RuFj222B6+7T83thSPqLjwBIfQawTkC++2HA=

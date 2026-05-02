@@ -4,8 +4,10 @@ go 1.25.0
 
 tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 
-replace github.com/emilioforrer/go-stack/pkg/boot => ./pkg/boot
-replace github.com/emilioforrer/go-stack/pkg/httpsvr => ./pkg/httpsvr
+replace (
+	github.com/emilioforrer/go-stack/pkg/boot => ./pkg/boot
+	github.com/emilioforrer/go-stack/pkg/httpsvr => ./pkg/httpsvr
+)
 
 require (
 	4d63.com/gocheckcompilerdirectives v1.3.0 // indirect
