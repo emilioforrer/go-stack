@@ -34,12 +34,38 @@ func TestNewRootCmd(t *testing.T) {
 		}
 	})
 
-	t.Run("new command registered", func(t *testing.T) {
+	t.Run("unknown subcommand returns error", func(t *testing.T) {
+		cmd := newRootCmd()
+		cmd.SetArgs([]string{"asdasd"})
+		var buf bytes.Buffer
+		cmd.SetOut(&buf)
+		cmd.SetErr(&buf)
+		err := cmd.Execute()
+		if err == nil {
+			t.Fatal("expected an error for unknown subcommand")
+		}
+		out := buf.String()
+		if !strings.Contains(out, "unknown command") && !strings.Contains(err.Error(), "unknown command") {
+			t.Errorf("expected error or output to mention 'unknown command', got error: %v, output: %s", err, out)
+		}
+	})
+
+	t.Run("no args prints help", func(t *testing.T) {
 		t.Parallel()
 		cmd := newRootCmd()
-		_, _, err := cmd.Find([]string{"new"})
+		var buf bytes.Buffer
+		cmd.SetOut(&buf)
+		cmd.SetErr(&buf)
+		err := cmd.Execute()
 		if err != nil {
-			t.Fatalf("expected no error finding 'new' command, got: %v", err)
+			t.Fatalf("unexpected error: %v", err)
+		}
+		out := buf.String()
+		if !strings.Contains(out, "go-stack") {
+			t.Errorf("expected output to contain 'go-stack', got: %s", out)
+		}
+		if !strings.Contains(out, "new") {
+			t.Errorf("expected output to contain 'new', got: %s", out)
 		}
 	})
 }

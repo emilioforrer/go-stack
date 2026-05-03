@@ -25,10 +25,13 @@ var (
 // newRootCmd builds a fresh cobra command tree.
 func newRootCmd() *cobra.Command {
 	root := &cobra.Command{
-		Use:           "go-stack",
-		Short:         "Go Stack CLI for scaffolding projects",
-		SilenceUsage:  true,
-		SilenceErrors: true,
+		Use:          "go-stack",
+		Short:        "Go Stack CLI for scaffolding projects",
+		SilenceUsage: true,
+		Args:         cobra.NoArgs,
+		Run: func(cmd *cobra.Command, _ []string) {
+			_ = cmd.Help()
+		},
 	}
 
 	newCmd := &cobra.Command{
