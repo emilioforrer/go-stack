@@ -1,3 +1,4 @@
 [tools]
+"github:microsoft/apm" = "latest"
 go = "latest"
 task = "latest"
