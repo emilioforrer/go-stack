@@ -134,3 +134,15 @@ tasks:
     cmds:
       - go mod edit -go={{.VERSION}}
     silent: true
+
+  apm:install:
+    desc: Install APM packages
+    cmds:
+      - apm install
+    silent: true
+
+  apm:compile:
+    desc: Compile APM packages
+    cmds:
+      - apm compile
+    silent: true

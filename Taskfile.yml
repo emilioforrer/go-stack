@@ -38,6 +38,18 @@ tasks:
       - task: template:test:coverage
     silent: true
 
+  apm:install:
+    desc: Install APM packages
+    cmds:
+      - apm install
+    silent: true
+
+  apm:compile:
+    desc: Compile APM packages
+    cmds:
+      - apm compile
+    silent: true
+
   update:go:*:
     desc: Update go.mod go version in all modules
     vars:
