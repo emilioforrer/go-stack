@@ -8,6 +8,14 @@ This template is built with the following principles in mind:
 - **AI Agentic Ready** — structured, documented, and predictable code that automated agents and LLMs can understand and extend with ease.
 - **Easy to Extend** — pluggable packages, dependency injection, and minimal coupling so new features fit in naturally.
 
+## Installation
+
+Install the CLI globally using `go install`:
+
+```bash
+go install github.com/emilioforrer/go-stack/cmd/go-stack@latest
+```
+
 ## CLI
 
 The `go-stack` CLI helps you scaffold new projects from this template in seconds.
