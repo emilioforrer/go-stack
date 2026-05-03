@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-05-03T15:00:05.764858+00:00'
+generated_at: '2026-05-03T15:23:57.980922+00:00'
 apm_version: 0.11.0
 dependencies:
 - repo_url: JetBrains/go-modern-guidelines
@@ -9,7 +9,7 @@ dependencies:
   is_virtual: true
   package_type: claude_skill
   deployed_files:
-  - .agents/skills/use-modern-go
+  - .gemini/skills/use-modern-go
   content_hash: sha256:a814593e0b52d429d6fedd2550782b11891408111ca6fc9b04ec80f308e547bb
 - repo_url: affaan-m/everything-claude-code
   host: github.com
@@ -18,7 +18,7 @@ dependencies:
   is_virtual: true
   package_type: claude_skill
   deployed_files:
-  - .agents/skills/golang-patterns
+  - .gemini/skills/golang-patterns
   content_hash: sha256:67c25e95cec3f3166c2efefd5f4502863a1246c6f742b8cbcd2e2864d2a8182a
 - repo_url: affaan-m/everything-claude-code
   host: github.com
@@ -27,7 +27,7 @@ dependencies:
   is_virtual: true
   package_type: claude_skill
   deployed_files:
-  - .agents/skills/golang-testing
+  - .gemini/skills/golang-testing
   content_hash: sha256:db6e910031d9c289f91697cf2397b8a3f717c6fdeae7a115e811a32544d99e11
 - repo_url: anthropics/skills
   host: github.com
@@ -36,53 +36,53 @@ dependencies:
   is_virtual: true
   package_type: claude_skill
   deployed_files:
-  - .agents/skills/skill-creator
+  - .gemini/skills/skill-creator
   content_hash: sha256:b2bfe91d69ca99994c0566baede889e7d2b9bb8791c6b6106c5d387392f717f6
 - repo_url: samber/cc-skills-golang
   host: github.com
   resolved_commit: e9761db859c6969b77a8fd0e8a243f4f28240211
   package_type: marketplace_plugin
   deployed_files:
-  - .agents/skills/golang-benchmark
-  - .agents/skills/golang-cli
-  - .agents/skills/golang-code-style
-  - .agents/skills/golang-concurrency
-  - .agents/skills/golang-context
-  - .agents/skills/golang-continuous-integration
-  - .agents/skills/golang-data-structures
-  - .agents/skills/golang-database
-  - .agents/skills/golang-dependency-injection
-  - .agents/skills/golang-dependency-management
-  - .agents/skills/golang-design-patterns
-  - .agents/skills/golang-documentation
-  - .agents/skills/golang-error-handling
-  - .agents/skills/golang-google-wire
-  - .agents/skills/golang-graphql
-  - .agents/skills/golang-grpc
-  - .agents/skills/golang-lint
-  - .agents/skills/golang-modernize
-  - .agents/skills/golang-naming
-  - .agents/skills/golang-observability
-  - .agents/skills/golang-performance
-  - .agents/skills/golang-popular-libraries
-  - .agents/skills/golang-project-layout
-  - .agents/skills/golang-safety
-  - .agents/skills/golang-samber-do
-  - .agents/skills/golang-samber-hot
-  - .agents/skills/golang-samber-lo
-  - .agents/skills/golang-samber-mo
-  - .agents/skills/golang-samber-oops
-  - .agents/skills/golang-samber-ro
-  - .agents/skills/golang-samber-slog
-  - .agents/skills/golang-security
-  - .agents/skills/golang-spf13-cobra
-  - .agents/skills/golang-spf13-viper
-  - .agents/skills/golang-stay-updated
-  - .agents/skills/golang-stretchr-testify
-  - .agents/skills/golang-structs-interfaces
-  - .agents/skills/golang-swagger
-  - .agents/skills/golang-testing
-  - .agents/skills/golang-troubleshooting
-  - .agents/skills/golang-uber-dig
-  - .agents/skills/golang-uber-fx
+  - .gemini/skills/golang-benchmark
+  - .gemini/skills/golang-cli
+  - .gemini/skills/golang-code-style
+  - .gemini/skills/golang-concurrency
+  - .gemini/skills/golang-context
+  - .gemini/skills/golang-continuous-integration
+  - .gemini/skills/golang-data-structures
+  - .gemini/skills/golang-database
+  - .gemini/skills/golang-dependency-injection
+  - .gemini/skills/golang-dependency-management
+  - .gemini/skills/golang-design-patterns
+  - .gemini/skills/golang-documentation
+  - .gemini/skills/golang-error-handling
+  - .gemini/skills/golang-google-wire
+  - .gemini/skills/golang-graphql
+  - .gemini/skills/golang-grpc
+  - .gemini/skills/golang-lint
+  - .gemini/skills/golang-modernize
+  - .gemini/skills/golang-naming
+  - .gemini/skills/golang-observability
+  - .gemini/skills/golang-performance
+  - .gemini/skills/golang-popular-libraries
+  - .gemini/skills/golang-project-layout
+  - .gemini/skills/golang-safety
+  - .gemini/skills/golang-samber-do
+  - .gemini/skills/golang-samber-hot
+  - .gemini/skills/golang-samber-lo
+  - .gemini/skills/golang-samber-mo
+  - .gemini/skills/golang-samber-oops
+  - .gemini/skills/golang-samber-ro
+  - .gemini/skills/golang-samber-slog
+  - .gemini/skills/golang-security
+  - .gemini/skills/golang-spf13-cobra
+  - .gemini/skills/golang-spf13-viper
+  - .gemini/skills/golang-stay-updated
+  - .gemini/skills/golang-stretchr-testify
+  - .gemini/skills/golang-structs-interfaces
+  - .gemini/skills/golang-swagger
+  - .gemini/skills/golang-testing
+  - .gemini/skills/golang-troubleshooting
+  - .gemini/skills/golang-uber-dig
+  - .gemini/skills/golang-uber-fx
   content_hash: sha256:5494f69696ae00c417c8b1a90af8f8c1e97d59ef3e361b52208914387aac8c78
