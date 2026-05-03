@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-05-01T17:47:34.775273+00:00'
+generated_at: '2026-05-03T03:36:17.065335+00:00'
 apm_version: 0.11.0
 dependencies:
 - repo_url: JetBrains/go-modern-guidelines
@@ -35,6 +35,17 @@ dependencies:
   - .github/skills/golang-testing
   - .opencode/skills/golang-testing
   content_hash: sha256:db6e910031d9c289f91697cf2397b8a3f717c6fdeae7a115e811a32544d99e11
+- repo_url: anthropics/skills
+  host: github.com
+  resolved_commit: 5128e1865d670f5d6c9cef000e6dfc4e951fb5b9
+  virtual_path: skills/skill-creator
+  is_virtual: true
+  package_type: claude_skill
+  deployed_files:
+  - .claude/skills/skill-creator
+  - .github/skills/skill-creator
+  - .opencode/skills/skill-creator
+  content_hash: sha256:b2bfe91d69ca99994c0566baede889e7d2b9bb8791c6b6106c5d387392f717f6
 - repo_url: samber/cc-skills-golang
   host: github.com
   resolved_commit: e9761db859c6969b77a8fd0e8a243f4f28240211

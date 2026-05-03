@@ -8,6 +8,7 @@ dependencies:
   - github.com/affaan-m/everything-claude-code/skills/golang-patterns
   - github.com/affaan-m/everything-claude-code/skills/golang-testing
   - github.com/samber/cc-skills-golang
+  - github.com/anthropics/skills/skills/skill-creator
   mcp: []
 includes: auto
 scripts: {}
