@@ -8,7 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/emilioforrer/go-stack/internal/scaffold/template/boot/service/provider"
+	"github.com/emilioforrer/go-stack/internal/scaffold/template/boot/provider"
 	"github.com/emilioforrer/go-stack/pkg/boot"
 	"github.com/samber/do/v2"
 	"github.com/spf13/cobra"
