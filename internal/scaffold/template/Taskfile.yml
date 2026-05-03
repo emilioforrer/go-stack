@@ -126,3 +126,11 @@ tasks:
       - task: security:grype
       - task: security:snyk
     silent: true
+  
+  mod:update:go:*:
+    desc: Update go.mod go version
+    vars:
+      VERSION: '{{index .MATCH 0}}'
+    cmds:
+      - go mod edit -go={{.VERSION}}
+    silent: true

@@ -37,3 +37,22 @@ tasks:
       - task: httpsvr:test:coverage
       - task: template:test:coverage
     silent: true
+
+  update:go:*:
+    desc: Update go.mod go version in all modules
+    vars:
+      VERSION: '{{index .MATCH 0}}'
+    cmds:
+      - task: mod:update:go:{{.VERSION}}
+      - task: boot:mod:update:go:{{.VERSION}}
+      - task: httpsvr:mod:update:go:{{.VERSION}}
+      - task: template:mod:update:go:{{.VERSION}}
+    silent: true
+
+  mod:update:go:*:
+    desc: Update go.mod go version
+    vars:
+      VERSION: '{{index .MATCH 0}}'
+    cmds:
+      - go mod edit -go={{.VERSION}}
+    silent: true

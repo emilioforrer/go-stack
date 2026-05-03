@@ -21,3 +21,11 @@ tasks:
       - go test -count=1 -timeout 30s -coverprofile=coverage.out -covermode=atomic ./...
       - go tool cover -func=coverage.out
     silent: true
+  
+  mod:update:go:*:
+    desc: Update go.mod go version
+    vars:
+      VERSION: '{{index .MATCH 0}}'
+    cmds:
+      - go mod edit -go={{.VERSION}}
+    silent: true
