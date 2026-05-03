@@ -54,10 +54,10 @@ my-app/
 │   └── security/            # Security scan results, SBOM, Docker Compose, etc.
 ├── .agents/
 │   └── skills/              # Codex skills (45+ Go best-practice files)
-├── .agents/
-│   └── skills/              # Codex skills (45+ Go best-practice files)
 ├── .claude/
 │   └── skills/              # Claude Code skills (45+ Go best-practice files)
+├── .gemini/
+│   └── skills/              # Gemini skills (45+ Go best-practice files)
 ├── .github/
 │   └── skills/              # GitHub Copilot skills (45+ Go best-practice files)
 ├── .opencode/
@@ -80,6 +80,7 @@ This template is **AI agentic ready**. It ships with contextual skill files for 
 |---|---|
 | `.agents/skills/` | AI Agents (Codex) |
 | `.claude/skills/` | Claude Code |
+| `.gemini/skills/` | Gemini |
 | `.github/skills/` | GitHub Copilot |
 | `.opencode/skills/` | OpenCode |
 
