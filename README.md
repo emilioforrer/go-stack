@@ -52,6 +52,10 @@ my-app/
 │       └── server.go        # HTTP server provider (includes Huma + OpenAPI)
 ├── devops/
 │   └── security/            # Security scan results, SBOM, Docker Compose, etc.
+├── .agents/
+│   └── skills/              # Codex skills (45+ Go best-practice files)
+├── .agents/
+│   └── skills/              # Codex skills (45+ Go best-practice files)
 ├── .claude/
 │   └── skills/              # Claude Code skills (45+ Go best-practice files)
 ├── .github/
@@ -74,6 +78,7 @@ This template is **AI agentic ready**. It ships with contextual skill files for 
 
 | Directory | Agent |
 |---|---|
+| `.agents/skills/` | AI Agents (Codex) |
 | `.claude/skills/` | Claude Code |
 | `.github/skills/` | GitHub Copilot |
 | `.opencode/skills/` | OpenCode |
