@@ -178,3 +178,11 @@ dependencies:
   - .opencode/skills/golang-uber-dig
   - .opencode/skills/golang-uber-fx
   content_hash: sha256:5494f69696ae00c417c8b1a90af8f8c1e97d59ef3e361b52208914387aac8c78
+local_deployed_files:
+- .claude/commands/go-stack.project-update.md
+- .github/prompts/go-stack.project-update.prompt.md
+- .opencode/commands/go-stack.project-update.md
+local_deployed_file_hashes:
+  .claude/commands/go-stack.project-update.md: sha256:c2e87e98f2f9b1c7960c6b9de62a193b5cba320ffe32fb5dc3904de59d111536
+  .github/prompts/go-stack.project-update.prompt.md: sha256:44fee4d9961b7f4b7b8680cfc3463483689ae2c3f20568db09988cdee7f74640
+  .opencode/commands/go-stack.project-update.md: sha256:c2e87e98f2f9b1c7960c6b9de62a193b5cba320ffe32fb5dc3904de59d111536
