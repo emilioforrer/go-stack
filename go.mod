@@ -8,11 +8,6 @@ ignore apm_modules/
 
 ignore tmp/
 
-replace (
-	github.com/emilioforrer/go-stack/pkg/boot => ./pkg/boot
-	github.com/emilioforrer/go-stack/pkg/httpsvr => ./pkg/httpsvr
-)
-
 require github.com/spf13/cobra v1.10.2
 
 require (
