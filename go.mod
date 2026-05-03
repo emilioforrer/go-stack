@@ -4,6 +4,10 @@ go 1.25.0
 
 tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 
+ignore apm_modules/
+
+ignore tmp/
+
 replace (
 	github.com/emilioforrer/go-stack/pkg/boot => ./pkg/boot
 	github.com/emilioforrer/go-stack/pkg/httpsvr => ./pkg/httpsvr
@@ -219,5 +223,3 @@ require (
 	mvdan.cc/gofumpt v0.9.2 // indirect
 	mvdan.cc/unparam v0.0.0-20251027182757-5beb8c8f8f15 // indirect
 )
-
-ignore apm_modules/
