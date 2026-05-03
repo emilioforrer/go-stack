@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-05-01T22:13:51.152646+00:00'
+generated_at: '2026-05-03T04:29:48.951263+00:00'
 apm_version: 0.11.0
 dependencies:
 - repo_url: JetBrains/go-modern-guidelines
@@ -183,6 +183,6 @@ local_deployed_files:
 - .github/prompts/go-stack.project-update.prompt.md
 - .opencode/commands/go-stack.project-update.md
 local_deployed_file_hashes:
-  .claude/commands/go-stack.project-update.md: sha256:c2e87e98f2f9b1c7960c6b9de62a193b5cba320ffe32fb5dc3904de59d111536
-  .github/prompts/go-stack.project-update.prompt.md: sha256:44fee4d9961b7f4b7b8680cfc3463483689ae2c3f20568db09988cdee7f74640
-  .opencode/commands/go-stack.project-update.md: sha256:c2e87e98f2f9b1c7960c6b9de62a193b5cba320ffe32fb5dc3904de59d111536
+  .claude/commands/go-stack.project-update.md: sha256:0f81cfb77af26a4937c0a73811c7ac4afc4630c00075fac73af6ea457c7b819c
+  .github/prompts/go-stack.project-update.prompt.md: sha256:13f475eca14e77711474f661f5e889b5cb1c0791f4de08d263ad4b4e030ca4b4
+  .opencode/commands/go-stack.project-update.md: sha256:0f81cfb77af26a4937c0a73811c7ac4afc4630c00075fac73af6ea457c7b819c

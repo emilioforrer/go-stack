@@ -27,6 +27,7 @@ Compare the files in the current project against the latest version of the upstr
    - `.mise.toml`
    - `apm.yml`
    - `apm.lock.yaml`
+   - `.apm/` — APM prompts, agents, and local configuration
    - `go.mod` (structure and tools)
    - `boot/provider/` — provider patterns and lifecycle code
    - `cmd/app/` — CLI entry points, commands, and tests
@@ -56,6 +57,7 @@ Compare the files in the current project against the latest version of the upstr
   - Linter rule changes or new exclusions in `.golangci.yml`
   - Updates to `devops/security/docker-compose.yml` or scanning scripts
   - New or updated skill files under `.github/skills/`, `.claude/skills/`, `.opencode/skills/`
+  - New or updated APM prompts, agents, skills, or configuration under `.apm/`
   - Changes to `boot/provider/server.go` or similar shared provider patterns
   - Fixes to CLI command files (`cmd/app/*.go`) that are part of the scaffold
 
