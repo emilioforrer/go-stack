@@ -8,6 +8,10 @@ tool (
 	github.com/goreleaser/goreleaser/v2
 )
 
+ignore apm_modules/
+ignore node_modules/
+ignore tmp/
+
 require (
 	github.com/danielgtaylor/huma/v2 v2.37.3
 	github.com/samber/do/v2 v2.0.0
