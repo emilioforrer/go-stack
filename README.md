@@ -1,5 +1,7 @@
 # go-stack
 
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-Support%20me-ff5f5f?logo=ko-fi&logoColor=white)](https://ko-fi.com/emilioforrer)
+
 **go-stack** is a scaffold template for Go projects designed to help you kickstart production-ready applications with confidence. It follows Go best practices, enforces clean architecture, and provides a well-organized structure that is easy to extend and maintain.
 
 This template is built with the following principles in mind:
