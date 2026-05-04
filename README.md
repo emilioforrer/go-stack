@@ -230,25 +230,28 @@ The template is **DevOps-ready** out of the box. It ships with local infrastruct
 The template uses [Task](https://taskfile.dev) as its command runner. After scaffolding, run any of the following from the project root:
 
 ```bash
-task test              # Run tests
-task test:coverage     # Run tests with coverage report
-task test:report       # Run tests and output JSON report
-task linter            # Run golangci-lint
-task govet             # Run go vet
-task ci                # Run the full CI pipeline (linter, vet, test, coverage, release)
-task run:local:serve   # Run the application locally with the serve command
-task release           # Build and release with GoReleaser
-task release:snapshot  # Build a snapshot release (no publish)
-task sonarqube:start   # Start the local SonarQube server
-task sonarqube:stop    # Stop the local SonarQube server
-task sonarqube:scan    # Run the SonarQube scanner
-task security:trivy     # Scan with Trivy
-task security:grype     # Scan with Grype
-task security:snyk      # Scan with Snyk
-task security:scan      # Run all security scans (Trivy, Grype, Snyk)
-task mod:rename         # Rename the Go module
-task mod:replace:add    # Add local replace directives for go-stack packages
-task mod:replace:drop   # Remove local replace directives
+task ci                    # Run CI pipeline (linter, test, coverage, release)
+task govet                 # Run go vet
+task linter                # Run linters
+task release               # Run goreleaser
+task test                  # Run tests
+task apm:compile           # Compile APM packages
+task apm:install           # Install APM packages
+task mod:rename            # Rename the module in go.mod
+task mod:replace:add       # Add local replace directives back to go.mod
+task mod:replace:drop      # Drop local replace directives from go.mod
+task mod:update:go:*       # Update go.mod go version
+task release:snapshot      # Run goreleaser snapshot (no publish)
+task run:local:serve       # Run the application locally with the serve subcommand
+task security:grype        # Scan the project for vulnerabilities with Grype
+task security:scan         # Run all security scans (Trivy, Grype, Snyk)
+task security:snyk         # Scan the project for vulnerabilities with Snyk
+task security:trivy        # Scan the project for vulnerabilities with Trivy
+task sonarqube:scan        # Run SonarQube scanner
+task sonarqube:start       # Start SonarQube server
+task sonarqube:stop        # Stop SonarQube server
+task test:coverage         # Run tests with coverage
+task test:report           # Run tests with JSON output
 ```
 
 ## Roadmap
