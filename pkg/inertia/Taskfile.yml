@@ -18,6 +18,12 @@ tasks:
       - "{{.GO_CMD}} test -coverprofile=coverage.out ./..."
       - "{{.GO_CMD}} tool cover -html=coverage.out -o coverage.html"
 
+  linter:
+    desc: Run linters
+    cmds:
+      - golangci-lint run -c ../../.golangci.yml ./...
+    silent: true
+
   vet:
     desc: Run go vet
     cmds:
@@ -66,12 +72,12 @@ tasks:
   all:
     desc: Run the full CI pipeline
     cmds:
+      - task: linter
       - task: tidy
       - task: vet
       - task: build
       - task: test
       - task: test:coverage
-
   mod:update:go:*:
     desc: Update go.mod go version
     vars:

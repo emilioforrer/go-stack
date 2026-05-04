@@ -9,6 +9,9 @@ includes:
   httpsvr:
     taskfile: ./pkg/httpsvr/Taskfile.yml
     dir: ./pkg/httpsvr
+  inertia:
+    taskfile: ./pkg/inertia/Taskfile.yml
+    dir: ./pkg/inertia
   template:
     taskfile: ./internal/scaffold/template/Taskfile.yml
     dir: ./internal/scaffold/template
@@ -19,6 +22,7 @@ tasks:
     cmds:
       - task: boot:linter
       - task: httpsvr:linter
+      - task: inertia:linter
       - task: template:linter
     silent: true
 
@@ -27,6 +31,7 @@ tasks:
     cmds:
       - task: boot:test
       - task: httpsvr:test
+      - task: inertia:test
       - task: template:test
     silent: true
 
@@ -35,6 +40,7 @@ tasks:
     cmds:
       - task: boot:test:coverage
       - task: httpsvr:test:coverage
+      - task: inertia:test:coverage
       - task: template:test:coverage
     silent: true
 
@@ -58,6 +64,7 @@ tasks:
       - task: mod:update:go:{{.VERSION}}
       - task: boot:mod:update:go:{{.VERSION}}
       - task: httpsvr:mod:update:go:{{.VERSION}}
+      - task: inertia:mod:update:go:{{.VERSION}}
       - task: template:mod:update:go:{{.VERSION}}
     silent: true
 

@@ -22,6 +22,12 @@ tasks:
       - go tool cover -func=coverage.out
     silent: true
   
+  govet:
+    desc: Run go vet
+    cmds:
+      - go vet ./...
+    silent: true
+
   mod:update:go:*:
     desc: Update go.mod go version
     vars:
