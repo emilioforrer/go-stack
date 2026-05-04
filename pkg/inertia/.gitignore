@@ -1,0 +1,39 @@
+# Go
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go workspace
+*.swp
+
+# Node
+node_modules/
+.npm/
+.pnpm-store/
+.yarn/
+
+# Vite
+.vite/
+dist/
+
+# Build artifacts
+public/build/
+bootstrap/ssr-manifest.json
+
+# Env files
+.env
+.env.*
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+public/hot
+coverage.html
+bootstrap/

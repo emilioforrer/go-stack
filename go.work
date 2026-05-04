@@ -4,5 +4,6 @@ use (
 	.
 	pkg/boot
 	pkg/httpsvr
+	pkg/inertia
 	internal/scaffold/template
 )

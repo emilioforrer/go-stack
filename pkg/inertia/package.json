@@ -1,0 +1,23 @@
+{
+  "name": "go-inertiajs",
+  "version": "1.0.0",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "dev:client": "vite --host 0.0.0.0 --port 5173",
+    "dev:ssr:build": "vite build --watch --config ssr.config.js",
+    "build": "vite build && vite build --config ssr.config.js",
+    "ssr": "node bootstrap/assets/ssr.js"
+  },
+  "devDependencies": {
+    "@inertiajs/react": "^2.0.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "laravel-vite-plugin": "^1.0",
+    "terser": "^5.39.0",
+    "vite": "^6.3.5"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
+}

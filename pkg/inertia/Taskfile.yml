@@ -1,0 +1,81 @@
+version: '3'
+
+env:
+  GO_MODULE: github.com/emilioforrer/go-stack/pkg/inertia
+
+vars:
+  GO_CMD: go
+
+tasks:
+  test:
+    desc: Run Go unit tests with race detection
+    cmds:
+      - "{{.GO_CMD}} test ./... -race -count=1 -timeout 30s"
+
+  test:coverage:
+    desc: Run tests and open coverage report
+    cmds:
+      - "{{.GO_CMD}} test -coverprofile=coverage.out ./..."
+      - "{{.GO_CMD}} tool cover -html=coverage.out -o coverage.html"
+
+  vet:
+    desc: Run go vet
+    cmds:
+      - "{{.GO_CMD}} vet ./..."
+
+  tidy:
+    desc: Run go mod tidy
+    cmds:
+      - "{{.GO_CMD}} mod tidy"
+
+  build:
+    desc: Build the package
+    cmds:
+      - "{{.GO_CMD}} build ./..."
+
+  install:node:
+    desc: Install Node dependencies
+    cmds:
+      - npm install
+
+  dev:client:
+    desc: Start Vite dev server
+    cmds:
+      - npm run dev:client
+
+  dev:ssr:build:
+    desc: Build SSR bundle in watch mode
+    cmds:
+      - npm run dev:ssr:build
+
+  ssr:
+    desc: Start SSR server
+    cmds:
+      - npm run ssr
+
+  build:node:
+    desc: Build client and SSR bundles
+    cmds:
+      - npm run build
+
+  lint:js:
+    desc: Lint JS/Vite config
+    cmds:
+      - npx eslint . || true
+
+  all:
+    desc: Run the full CI pipeline
+    cmds:
+      - task: tidy
+      - task: vet
+      - task: build
+      - task: test
+      - task: test:coverage
+
+  mod:update:go:*:
+    desc: Update go.mod go version
+    vars:
+      VERSION: '{{index .MATCH 0}}'
+    cmds:
+      - go mod edit -go={{.VERSION}}
+    silent: true
