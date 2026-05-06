@@ -19,6 +19,11 @@ For the full reference, see [git-commits.context.md](../contexts/git-commits.con
 
 ## Files matching `**/*.go`
 
+<!-- Source: local .apm/instructions/architecture.instructions.md -->
+# Architecture Instructions
+
+For the full reference, see [architecture-short.context.md](../contexts/architecture-short.context.md).
+
 <!-- Source: local .apm/instructions/di.instructions.md -->
 # Dependency Injection Instructions
 
