@@ -56,25 +56,32 @@ func runServe(ctx context.Context, _ *cobra.Command) error {
 	// ... your existing code ...
 
 	// Example: open a *sql.DB and wrap it with bun
-	sqldb, err := bundb.OpenSQLDB("pgx", "postgres://user:pass@localhost/db", bundb.SQLDBOptions{
-		MaxOpenConns:    25,
-		MaxIdleConns:    5,
-		ConnMaxLifetime: time.Hour,
-	})
+	pool, err := pgxpool.New(context.Background(), "postgres://user:pass@localhost/db")
 	if err != nil {
-		return fmt.Errorf("open database: %w", err)
+		return fmt.Errorf("database: failed to create connection pool: %w", err)
 	}
+	sqldb := stdlib.OpenDBFromPool(pool)
+
+	// OR Open a *sql.DB directly with stdlib and wrap it with bun
+	// sqldb, err := bundb.OpenSQLDB("pgx", "postgres://user:pass@localhost/db", bundb.SQLDBOptions{
+	// 	MaxOpenConns:    25,
+	// 	MaxIdleConns:    5,
+	// 	ConnMaxLifetime: time.Hour,
+	// })
+	// if err != nil {
+	// 	return fmt.Errorf("open database: %w", err)
+	// }
+
+	// Ensure the database is closed on application shutdown
+	defer sqldb.Close()
 
 	bootstrapper := newBootstrapper(
 		i,
 		provider.NewServerProvider(opts),
 		// Add the BunProvider after the ServerProvider
 		bundb.NewBunProvider(bundb.ProviderOptions{
-			SQLDB:         sqldb,
-			Dialect:       pgdialect.New(),
-			MaxOpenConns:  25,
-			MaxIdleConns:  5,
-			ConnMaxLifetime: time.Hour,
+			SQLDB:   sqldb,
+			Dialect: pgdialect.New(),
 		}),
 	)
 	// ... your existing code ...
@@ -82,6 +89,10 @@ func runServe(ctx context.Context, _ *cobra.Command) error {
 ```
 
 > **Note:** If you already have a `*pgxpool.Pool` from another provider, pass it via `ProviderOptions.PGXPool` instead of `SQLDB`, and set the `Dialect` accordingly.
+>
+> **Note:** The connection pool settings (`MaxOpenConns`, `MaxIdleConns`, `ConnMaxLifetime`) are configured when opening the `*sql.DB`. They do not need to be repeated in `ProviderOptions` unless `BunProvider` maintains its own internal pool.
+>
+> **Note:** The `pgx` driver (`github.com/jackc/pgx/v5`) is required and is typically pulled in automatically as a transitive dependency of `pkg/bundb`. If it is missing from your module graph, add it explicitly with `go get github.com/jackc/pgx/v5`.
 
 ## 4. Create the migrations directory
 
@@ -95,6 +106,18 @@ mkdir -p migrations
 
 ```bash
 go mod tidy
+```
+
+## 6. Verify the setup
+
+Confirm the CLI command is registered and BunDB is wired correctly:
+
+```bash
+# List available commands — "bun" should appear
+go run ./cmd/app --help
+
+# Verify the bun subcommand works
+go run ./cmd/app bun --help
 ```
 
 ## Additional References
