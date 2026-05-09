@@ -2,8 +2,9 @@ go 1.26.2
 
 use (
 	.
+	internal/scaffold/template
 	pkg/boot
+	pkg/bundb
 	pkg/httpsvr
 	pkg/inertia
-	internal/scaffold/template
 )
