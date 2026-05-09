@@ -3,7 +3,7 @@ module github.com/emilioforrer/go-stack/pkg/bundb
 go 1.26.2
 
 require (
-	github.com/emilioforrer/go-stack/pkg/boot v0.0.0
+	github.com/emilioforrer/go-stack/pkg/boot v0.0.0-20260509043442-f5af9a631f31
 	github.com/jackc/pgx/v5 v5.9.2
 	github.com/samber/do/v2 v2.0.0
 	github.com/spf13/cobra v1.10.2
@@ -13,8 +13,6 @@ require (
 	github.com/uptrace/bun/dialect/sqlitedialect v1.2.18
 	modernc.org/sqlite v1.50.0
 )
-
-replace github.com/emilioforrer/go-stack/pkg/boot => ../boot
 
 require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
