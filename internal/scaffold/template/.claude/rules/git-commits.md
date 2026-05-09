@@ -5,4 +5,5 @@ paths:
 
 # Git Commit Instructions
 
-Always consult and adhere to the commit guidelines defined in `.apm/contexts/git-commits.context.md` when writing or reviewing commit messages. All commit messages MUST follow the Conventional Commits specification as described in that file.
+For the full reference, see [git-commits.context.md](../../.apm/contexts/git-commits.context.md).
+

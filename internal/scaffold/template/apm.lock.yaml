@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-05-04T01:51:51.672788+00:00'
+generated_at: '2026-05-09T04:34:20.338994+00:00'
 apm_version: 0.11.0
 dependencies:
 - repo_url: JetBrains/go-modern-guidelines
@@ -271,18 +271,38 @@ dependencies:
   - .opencode/skills/golang-uber-fx
   content_hash: sha256:5494f69696ae00c417c8b1a90af8f8c1e97d59ef3e361b52208914387aac8c78
 local_deployed_files:
+- .claude/commands/go-stack.bundb.setup.md
 - .claude/commands/go-stack.inertia.setup.md
+- .claude/rules/architecture.md
+- .claude/rules/di.md
 - .claude/rules/git-commits.md
+- .claude/rules/test-standards.md
+- .gemini/commands/go-stack.bundb.setup.toml
 - .gemini/commands/go-stack.inertia.setup.toml
 - .gemini/commands/go-stack.project-update.toml
+- .github/instructions/architecture.instructions.md
+- .github/instructions/di.instructions.md
 - .github/instructions/git-commits.instructions.md
+- .github/instructions/test-standards.instructions.md
+- .github/prompts/go-stack.bundb.setup.prompt.md
 - .github/prompts/go-stack.inertia.setup.prompt.md
+- .opencode/commands/go-stack.bundb.setup.md
 - .opencode/commands/go-stack.inertia.setup.md
 local_deployed_file_hashes:
+  .claude/commands/go-stack.bundb.setup.md: sha256:044bd6713a825dd63523855218d53d809385834eebbe79e6df9bd36e401d1a61
   .claude/commands/go-stack.inertia.setup.md: sha256:3b6f62535e4abb2493682e7bbc409ce370183eda2ab07f645b3d93171df71603
-  .claude/rules/git-commits.md: sha256:bde364df11cdb130326daa6aceaca03e9047d4d9627f63a5790f2493c3133f4c
+  .claude/rules/architecture.md: sha256:d491271eb03586c715bd313ed76aaba0856040d6618d33b8421602c93da98837
+  .claude/rules/di.md: sha256:7de0aca15aee4aba66f4d3aba4d7cbe69ab97e98f8ab60c437ab30f4cdf77d5c
+  .claude/rules/git-commits.md: sha256:abf5c99bfc6a6f6fe868513530273bf764fd921046b90575fd33754c01cc21f2
+  .claude/rules/test-standards.md: sha256:703a255607c03fcc109c7eb8f5ff171c2084d2af31f9e8c445c25175f0367580
+  .gemini/commands/go-stack.bundb.setup.toml: sha256:ade3076e1a2dac393e206231aaa1340a833ff14d0c70196ce375729efd506771
   .gemini/commands/go-stack.inertia.setup.toml: sha256:92327a637028171a15e80eaa7f8a89d2e5964f822a27e7d43416bda8abab2629
   .gemini/commands/go-stack.project-update.toml: sha256:6207dde1f08650d21029905dc4d2acb588f88da2e9b887ef0daea3d57da97f42
-  .github/instructions/git-commits.instructions.md: sha256:27e6e663550ffeb0793a944a81d9c588c7383b57eb464c14f94db58b7fbedb3e
+  .github/instructions/architecture.instructions.md: sha256:8211fac14094e74a62d62563013faf10e00cbc42112bed6a8c0f283435a71e75
+  .github/instructions/di.instructions.md: sha256:f2cce7e89305ebf89b1db962d83e20f9729dfb615a66be8778026890c29af9e3
+  .github/instructions/git-commits.instructions.md: sha256:f92378facf5c839614c8a766215606de8c8790fb4e7ebf3aff84824a2a141e27
+  .github/instructions/test-standards.instructions.md: sha256:fed104fd50f78070871c799677507d47699cd7216505d203e142db4c132e25e5
+  .github/prompts/go-stack.bundb.setup.prompt.md: sha256:5bc775230ec971ac7e1db1ac2c3a8126fbb94695b9fbb29b7a6cf1ac43eebd68
   .github/prompts/go-stack.inertia.setup.prompt.md: sha256:f1e15aaa4c334d3a252b89ec869bc4175453ca4af8aeda4de1893ba81fcb98b5
+  .opencode/commands/go-stack.bundb.setup.md: sha256:044bd6713a825dd63523855218d53d809385834eebbe79e6df9bd36e401d1a61
   .opencode/commands/go-stack.inertia.setup.md: sha256:3b6f62535e4abb2493682e7bbc409ce370183eda2ab07f645b3d93171df71603
