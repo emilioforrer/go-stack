@@ -56,14 +56,22 @@ func runServe(ctx context.Context, _ *cobra.Command) error {
 	// ... your existing code ...
 
 	// Example: open a *sql.DB and wrap it with bun
-	sqldb, err := bundb.OpenSQLDB("pgx", "postgres://user:pass@localhost/db", bundb.SQLDBOptions{
-		MaxOpenConns:    25,
-		MaxIdleConns:    5,
-		ConnMaxLifetime: time.Hour,
-	})
+	pool, err := pgxpool.New(context.Background(), "postgres://user:pass@localhost/db")
 	if err != nil {
-		return fmt.Errorf("open database: %w", err)
+		return fmt.Errorf("database: failed to create connection pool: %w", err)
 	}
+	sqldb := stdlib.OpenDBFromPool(pool)
+
+	// OR Open a *sql.DB directly with stdlib and wrap it with bun
+	// sqldb, err := bundb.OpenSQLDB("pgx", "postgres://user:pass@localhost/db", bundb.SQLDBOptions{
+	// 	MaxOpenConns:    25,
+	// 	MaxIdleConns:    5,
+	// 	ConnMaxLifetime: time.Hour,
+	// })
+	// if err != nil {
+	// 	return fmt.Errorf("open database: %w", err)
+	// }
+
 	// Ensure the database is closed on application shutdown
 	defer sqldb.Close()
 
