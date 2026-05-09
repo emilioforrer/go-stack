@@ -316,13 +316,8 @@ func (c *Cmd) runMigrateStatus(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *Cmd) runMigrateCreate(cmd *cobra.Command, args []string) error {
-	db, err := c.openDB()
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
-	migrator := c.newMigrator(db)
+	migrations := migrate.NewMigrations(migrate.WithMigrationsDirectory(c.MigrationsDir))
+	migrator := migrate.NewMigrator(nil, migrations)
 	files, err := migrator.CreateSQLMigrations(cmd.Context(), args[0])
 	if err != nil {
 		return fmt.Errorf("create migration: %w", err)
