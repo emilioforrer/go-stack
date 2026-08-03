@@ -1,0 +1,24 @@
+# Application configuration loaded by the ConfigProvider via koanf.
+#
+# Each provider reads its own subsection using the global *koanf.Koanf
+# registered into the DI container by ConfigProvider.
+
+migrator:
+  # Path (relative to the working directory) of the embedded migrations
+  # directory. Used here only for logging; migrations are embedded at compile time.
+  migrations_dir: migrations
+
+db:
+  # SQLite DSN. Use "file::memory:?cache=shared" for an in-memory database
+  # shared across connections, or a file path for persistence.
+  dsn: file:example.db?cache=shared&_pragma=foreign_keys(1)
+  max_open_conns: 1
+  max_idle_conns: 1
+
+seeder:
+  # Number of users to insert when the users table is empty.
+  count: 50
+
+server:
+  addr: ":8080"
+  read_header_timeout: 5s

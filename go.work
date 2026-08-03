@@ -4,6 +4,7 @@ use (
 	.
 	internal/scaffold/template
 	pkg/boot
+	pkg/boot/example
 	pkg/bundb
 	pkg/httpsvr
 	pkg/inertia
