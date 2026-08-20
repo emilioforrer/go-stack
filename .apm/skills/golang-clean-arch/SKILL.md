@@ -14,7 +14,7 @@ compatibility: >
   Golang.
 metadata:
   author: company
-  version: "1.0.0"
+  version: "1.1.0"
   openclaw:
     emoji: "🏗️"
     homepage: https://github.com/samber/cc-skills-golang
@@ -102,6 +102,20 @@ Do not load it for every task. Read it when:
 
 When the example conflicts with this skill or repository-specific instructions,
 this skill and the repository instructions take precedence.
+
+## Focused References
+
+Read only the reference needed for the current decision:
+
+* [`references/boundary-contracts.md`](references/boundary-contracts.md) for
+  transport mapping, presenters, validation ownership, persistence mapping,
+  transaction boundaries, and testing by layer;
+* [`references/cross-feature-collaboration.md`](references/cross-feature-collaboration.md)
+  for choosing among workflows, executable composition, projections, events,
+  and shared external clients.
+
+These references explain and illustrate the rules in this skill. They do not
+override this skill or repository-specific instructions.
 
 ## Canonical Structure
 
@@ -388,6 +402,10 @@ A use case owns its transport-independent:
 * application errors;
 * tests.
 
+Use-case inputs and outputs are plain Go types. They MUST NOT contain transport
+or persistence tags such as `json`, `xml`, `protobuf`, `bson`, `db`, `gorm`, or
+`bun`.
+
 A use case coordinates domain behavior and outgoing ports.
 
 Use cases MUST NOT depend on:
@@ -441,6 +459,21 @@ Outgoing adapters implement external capabilities required by the application.
 
 Adapter-specific models remain inside their adapters.
 
+Incoming adapters own transport request and response models, serialization,
+protocol validation, status-code mapping, and presentation mapping. A dedicated
+presenter is optional and, when useful, belongs to the incoming adapter. It MUST
+NOT be passed into or invoked by application or domain code.
+
+Incoming adapters MUST NOT call outgoing adapters, repositories, SDK clients,
+or external APIs directly. They call incoming ports or use-case handlers.
+
+Outgoing adapters own persistence models, SDK payloads, wire formats, and the
+mapping between those infrastructure shapes and domain or application-owned
+types. Repositories MUST NOT return persistence models across their adapter
+boundary.
+
+Transport and persistence tags MUST NOT appear in domain or application types.
+
 Examples of adapter organization:
 
 ```text
@@ -456,6 +489,22 @@ adapter/outgoing/storage/s3
 
 Business rules MUST NOT live in adapters.
 
+## Validation Ownership
+
+Place validation with the layer that owns the rule:
+
+| Owner | Responsibility |
+| --- | --- |
+| Domain | Invariants that must hold for every valid entity or aggregate |
+| Use case | Preconditions and business rules specific to one operation; may query outgoing ports |
+| Incoming adapter | Payload shape, required transport fields, parsing, and protocol-level format checks |
+
+Do not require a dedicated validator type or file when a constructor, aggregate
+method, or use-case handler expresses the rule more clearly.
+
+Domain and application errors remain transport-independent. Incoming adapters
+map them to protocol-specific responses.
+
 ## Feature Isolation
 
 A feature MUST NOT import another feature.
@@ -466,6 +515,15 @@ Cross-feature collaboration uses one of:
 2. an event;
 3. a genuinely shared contract;
 4. composition at the executable boundary.
+
+For data needed locally without synchronous coupling, a feature MAY own a read
+model or projection populated by domain events or scheduled jobs. The read model
+belongs to the consuming feature and MUST NOT expose another feature's domain or
+persistence types.
+
+Event consumers translate external event contracts into their own feature
+language at an anti-corruption boundary. They MUST NOT reuse the producer's
+domain types as the consumer's model.
 
 Do not access another feature through its domain, repository, adapter, outgoing
 port, or use-case implementation.
@@ -537,6 +595,29 @@ shared/repositories
 ```
 
 Prefer limited duplication over a misleading shared abstraction.
+
+## Shared External Integrations
+
+When multiple features use the same external system, share only its technical
+client:
+
+```text
+feature-owned outgoing port
+        ▲ implemented by
+feature-specific outgoing adapter
+        │ uses
+        ▼
+shared raw technical client
+```
+
+The shared client may own authentication, retries, pagination, rate limiting,
+connection handling, and wire-format types. It MUST NOT contain feature-specific
+business language or decisions.
+
+Each consuming feature defines its own business-oriented outgoing port and owns
+an outgoing adapter that translates between that port and the shared client.
+Do not share a feature gateway, repository, persistence model, or domain type
+merely because the underlying external system is shared.
 
 ## Configuration Ownership
 
@@ -765,6 +846,14 @@ cmd/<executable>/                                  # composition only
 
 Changes outside the expected surface require a clear architectural reason.
 
+Folder placement alone does not establish architectural compliance. Inspect
+imports, dependency construction, and runtime calls to verify that code follows
+the dependency rules.
+
+Use replacement cost as a diagnostic: changing a framework, database, message
+broker, transport, or external API SHOULD normally change adapters and
+composition, not domain or use-case code.
+
 ## Architecture Validation
 
 Before completing a change, verify:
@@ -779,6 +868,12 @@ Before completing a change, verify:
 * [ ] Domain code remains independent from infrastructure.
 * [ ] Application code does not import adapter implementations.
 * [ ] Adapter-specific models do not leak inward.
+* [ ] Domain and application types contain no transport or persistence tags.
+* [ ] Repositories do not return persistence models across adapter boundaries.
+* [ ] Incoming adapters do not call outgoing adapters or external systems directly.
+* [ ] Validation rules live with the layer that owns them.
+* [ ] Event consumers translate contracts into consumer-owned types.
+* [ ] Shared external clients contain no feature-specific business behavior.
 * [ ] Config dependencies are acyclic.
 * [ ] Shared packages do not depend on concrete features or workflows.
 * [ ] Dependency injection is absent from business logic.
