@@ -10,5 +10,8 @@ dependencies:
   - github.com/samber/cc-skills-golang
   - github.com/anthropics/skills/skills/skill-creator
   mcp: []
+targets:
+  - claude
+  - codex
 includes: auto
 scripts: {}
