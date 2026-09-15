@@ -1,13 +1,15 @@
 ---
 name: go-stack-boot
 description: >
-  Use go-stack's pkg/boot package to compose Go application startup, dependency
-  registration, long-running services, and graceful shutdown with samber/do.
-  Apply when adding or reviewing boot providers, wiring an executable's
-  lifecycle, ordering runtime dependencies, or testing startup and teardown.
+  Use go-stack's pkg/boot package as the thin application composition and
+  lifecycle entry point for configuring and registering packages, resolving
+  application dependencies with samber/do, starting long-running services,
+  supervising critical runtime failures, and performing graceful shutdown.
+  Apply when adding or reviewing boot providers, executable wiring, runtime
+  services, startup ordering, or teardown behavior.
 metadata:
   author: go-stack
-  version: "1.1.0"
+  version: "1.2.0"
 ---
 
 # Go Stack Boot
@@ -15,244 +17,305 @@ metadata:
 ## Purpose
 
 Use `github.com/emilioforrer/go-stack/pkg/boot` at an executable's composition
-boundary when several application-scoped runtime components need a shared
-`samber/do` injector and a deterministic lifecycle.
+boundary when application-scoped packages and services need shared dependency
+injection and a deterministic lifecycle.
 
-The lifecycle is:
+`pkg/boot` is the application's **thin entry point for composition and
+lifecycle**, not a place for business or technical behavior.
 
-1. `Register` every provider in declaration order.
-2. `Boot` every provider in declaration order, after registration succeeds.
-3. `Shutdown` every provider in reverse declaration order.
+Typical flow:
 
-Use `pkg/boot` for lifecycle orchestration, not for business logic.
+```text
+Configure
+   ↓
+Register packages/dependencies
+   ↓
+Boot runtime services
+   ↓
+Run + supervise
+   ↓
+Shutdown in reverse order
+```
+
+Lifecycle:
+
+1. `Register` providers in declaration order.
+2. `Boot` providers in declaration order after registration succeeds.
+3. `Shutdown` providers in reverse declaration order.
+
+## Scope
+
+Use boot for executable applications such as APIs, gateways, workers, CLIs with
+long-running services, consumers, schedulers, and technical daemons.
+
+Do not expose `boot.Container`, `boot.Provider`, or `do.Injector` as part of a
+library/SDK public API. Libraries normally use constructors and explicit
+resource ownership instead.
 
 ## Terminology
 
-Do not confuse these two concepts:
+- `boot.Provider`: thin application lifecycle adapter with `Register`, `Boot`,
+  and `Shutdown`.
+- `do.Provider[T]`: `samber/do` constructor for a dependency.
+- package/service: the real implementation containing behavior.
 
-- `boot.Provider` is an application lifecycle component with `Register`, `Boot`,
-  and `Shutdown` methods.
-- `do.Provider[T]` is a `samber/do` constructor function that creates a dependency.
+A `boot.Provider` orchestrates a package/service; it should not become the
+implementation itself.
 
-A runtime package may use both, but they have different responsibilities.
+## Thin Provider Rule
 
-## When to Use It
+Providers SHOULD contain only composition/lifecycle logic:
 
-Create a `boot.Provider` for an application-scoped runtime component when it:
+```text
+Register → resolve/configure/register dependencies
+Boot     → activate/start/verify readiness
+Shutdown → stop/wait/close owned resources
+```
 
-- registers dependencies in the application's `do.Injector`;
-- must initialize or verify a resource before the application is ready;
-- starts a server, consumer, scheduler, or other long-running process;
-- owns a resource that must stop or close during graceful shutdown; or
-- has startup or teardown ordering constraints relative to another component.
+Keep HTTP handlers, processing loops, business rules, protocol logic, storage
+logic, retries, and other real behavior in their owning packages/services.
 
-Typical providers manage configuration, databases, migrations, HTTP servers,
-message consumers, caches, telemetry, or background workers.
+Prefer:
+
+```go
+func (p *Provider) Register(_ context.Context, c boot.Container) error {
+    cfg := do.MustInvoke[*config.Config](c.Injector())
+    db := do.MustInvoke[*database.Client](c.Injector())
+
+    p.processor = worker.New(db, cfg.WorkerInterval)
+    do.ProvideValue(c.Injector(), p.processor)
+    return nil
+}
+
+func (p *Provider) Boot(ctx context.Context, _ boot.Container) error {
+    return p.processor.Start(ctx)
+}
+
+func (p *Provider) Shutdown(ctx context.Context, _ boot.Container) error {
+    return p.processor.Shutdown(ctx)
+}
+```
+
+Do not put the worker loop itself in the provider.
+
+## Dependency Injection
+
+The boot layer is allowed to access the application's dependency graph.
+Providers may resolve any dependency already registered in the shared
+`do.Injector` when composing their package/service.
+
+This makes boot the integration point between packages without requiring
+constructors to manually thread every dependency through `main.go`.
+
+However, do not turn DI into a runtime service locator:
+
+- providers/package registration may use `boot.Container` / `do.Injector`;
+- constructors receive concrete dependencies;
+- normal handlers, services, domain/application code, and background loops
+  should not retain or query the injector during normal execution.
+
+Use DI for **composition**, not hidden runtime dependency lookup.
+
+## When to Create a Provider
+
+Create a provider when an application-scoped package/service:
+
+- contributes dependencies to the application injector;
+- requires application configuration during assembly;
+- must initialize or verify a resource before readiness;
+- starts an HTTP server, consumer, scheduler, worker, or other long-running
+  service;
+- owns a resource that must be stopped or closed;
+- has startup/shutdown ordering constraints.
 
 Do not create a provider for:
 
-- pure domain or use-case logic;
-- stateless helper packages;
+- pure domain/application logic;
+- stateless helpers;
 - request-scoped work;
-- resources whose lifetime is confined to one operation.
+- short-lived operation-scoped resources;
+- a library that does not participate in the executable lifecycle.
 
-Keep business logic and ordinary constructors independent from `boot.Container`
-and `do.Injector`.
+For simple static values, direct DI registration at the composition root is
+fine; not every dependency needs its own provider.
 
-For a small command with one plainly owned resource, direct construction and a
-local `defer` can be clearer than a bootstrapper. Use `pkg/boot` when coordinated
-application lifecycle and dependency ordering provide real value.
-
-## Non-Negotiable Lifecycle Rules
-
-- Declare providers in dependency order.
-- Keep lifecycle method calls sequential. Do not call `Register`, `Boot`, or
-  `Shutdown` concurrently on the same bootstrapper.
-- Call `Register` before `Boot`; otherwise `Boot` returns
-  `boot.ErrBootBeforeRegister`.
-- A successful `Register` or `Boot` call is idempotent for that bootstrapper.
-- `Shutdown` is attempted at most once by `DefaultBootstrapper`, even when one or
-  more provider shutdowns fail.
-- After a failed `Register` or `Boot`, do not retry that phase on the same
-  bootstrapper. Request `Shutdown` and create a fresh bootstrapper if startup
-  must be attempted again.
-- Arrange cleanup before calling `Register`, because registration or boot may
-  partially initialize resources before returning an error.
-- Every provider's `Shutdown` must tolerate partial initialization.
-
-## Provider Placement and Ownership
-
-Keep a provider with the runtime component whose lifecycle it owns. Prefer:
+## Lifecycle Model
 
 ```text
-internal/config/provider.go
-internal/database/provider.go
-internal/worker/provider.go
-internal/server/provider.go
-```
-
-rather than a large generic package containing unrelated provider implementations.
-
-Registration must remain owned by the runtime package. A provider may register
-its dependencies directly in its package, or delegate to that package's existing
-`Package` function when the project uses package-based `samber/do` registration.
-
-Example delegation:
-
-```go
-func (p *Provider) Register(_ context.Context, container boot.Container) error {
-    database.Package(p.config)(container.Injector())
-    return nil
-}
-```
-
-Do not move domain constructors or feature registrations into the executable just
-because the executable owns provider ordering.
-
-A resource must have one lifecycle owner. `DefaultBootstrapper.Shutdown` calls
-`boot.Provider.Shutdown`; it does not automatically shut down the `samber/do`
-injector. If a resource could also be shut down by `samber/do`, do not independently
-close the same resource through both mechanisms.
-
-## Implementing a Provider
-
-Use a pointer receiver. Embed `boot.DefaultProvider` when only some lifecycle hooks
-need custom behavior, and add a compile-time interface assertion:
-
-```go
-type Provider struct {
-    boot.DefaultProvider
-}
-
-var _ boot.Provider = (*Provider)(nil)
-```
-
-Returning `boot.Provider` from a constructor is appropriate when callers only need
-to compose and order the provider:
-
-```go
-func NewProvider() boot.Provider {
-    return &Provider{}
-}
+Constructor → construct
+Register    → wire
+Boot        → activate + establish readiness
+Running     → supervise critical runtime failures
+Shutdown    → deactivate + release
 ```
 
 ### Register
 
 Use `Register` to:
 
-- validate configuration required for dependency assembly;
-- construct or register application-scoped dependencies;
-- expose values or package registrations through `container.Injector()`.
+- validate configuration required for assembly;
+- resolve dependencies registered by earlier providers;
+- construct thin package/service objects;
+- register application-scoped dependencies.
 
-Keep registration deterministic. Do not start long-running goroutines in this
-phase.
+`Register` MUST NOT start long-running goroutines, listeners, consumers, or
+other runtime activity.
 
-A provider may resolve a dependency during `Register` only when an earlier
-provider has already registered it. Prefer lazy `samber/do` registrations when
-construction can wait until `Boot` or first use.
+DI constructors should construct objects, not secretly start services or
+acquire long-lived runtime resources. Activation belongs in `Boot`.
 
 ### Boot
 
-Use `Boot` for work that makes the component ready:
+Use `Boot` to:
 
-- resolve registered dependencies;
-- verify connections;
-- run required startup work such as migrations;
-- start long-running processes.
+- establish connections;
+- verify readiness;
+- run required startup work;
+- start long-running services.
 
-Return startup failures so later providers do not boot.
+`Boot` receives the **application lifetime context**. Do not pass a short-lived
+startup timeout as the parent context for long-running services.
 
-Long-running work must not block `Boot`. Start it through an owned goroutine or an
-API that returns after startup. The provider must arrange for that work to observe
-the application context or stop it explicitly in `Shutdown`.
+Use operation-specific child contexts for bounded startup checks:
 
-`DefaultBootstrapper` does not supervise failures that happen after `Boot`
-returns. At minimum log unexpected background failures. If a background process
-is critical to application correctness, propagate the failure to an application
-supervisor that can cancel or terminate the application.
+```go
+checkCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+defer cancel()
 
-At the start of `Boot`, check state that `Register` must initialize and return a
-descriptive error when it is missing. This keeps providers safe to test directly.
+if err := client.Ping(checkCtx); err != nil {
+    return err
+}
+```
+
+Long-running work must not block `Boot`; `Boot` should return once the component
+is ready.
+
+### Runtime Supervision
+
+`DefaultBootstrapper` orchestrates startup/shutdown; it does not automatically
+supervise failures occurring after `Boot` returns.
+
+Classify runtime services:
+
+```text
+Non-critical failure → log/recover according to service policy
+Critical failure     → report to application supervisor
+                       → cancel/terminate application
+                       → graceful Shutdown
+```
+
+A critical HTTP listener, consumer, gateway loop, or required worker must not
+silently die while the process remains "healthy".
 
 ### Shutdown
 
-Use `Shutdown` to stop and close only resources the provider owns.
+`Shutdown` stops/closes only resources owned by that provider/service.
 
-It must:
+It MUST:
 
-- tolerate partial initialization and return `nil` when there is nothing to do;
-- honor the supplied context for bounded cleanup;
-- wait for owned goroutines when necessary;
-- return cleanup errors instead of swallowing them.
+- tolerate partial initialization;
+- return `nil` when there is nothing to clean up;
+- honor the supplied context;
+- wait for owned goroutines/resources when necessary;
+- return cleanup errors rather than swallowing them.
 
-The bootstrapper calls every provider's `Shutdown` in reverse declaration order
-and joins returned errors. It does not automatically roll back a failed
-`Register` or `Boot`; the composition root must request shutdown.
+Use exactly one lifecycle owner per resource. Do not independently close the
+same resource through both boot and `samber/do` shutdown mechanisms.
 
-## Ordering Providers
+## Non-Negotiable Rules
 
-Provider declaration order is lifecycle dependency order.
+- Declare providers in lifecycle dependency order.
+- Keep `Register`, `Boot`, and `Shutdown` sequential for one bootstrapper.
+- Call `Register` before `Boot`.
+- Arrange cleanup before startup because registration/boot may partially
+  initialize resources before returning an error.
+- `Shutdown` must be safe after partial `Register` or `Boot`.
+- After failed `Register` or `Boot`, shut down and create a fresh bootstrapper;
+  do not retry the failed phase on the same instance.
+- Preserve startup and shutdown failures when both matter, e.g. `errors.Join`.
 
-Place provider A before provider B when B:
+## Provider Placement
 
-- resolves A's registrations during `Register`;
-- requires A to be ready before B's `Boot` can succeed; or
-- must stop before A is closed.
-
-For example:
+Keep providers close to the package/service they compose:
 
 ```text
-Config
-  ↓
+internal/database/provider.go
+internal/worker/provider.go
+internal/server/provider.go
+```
+
+Keep actual behavior beside them in ordinary files:
+
+```text
+internal/worker/processor.go
+internal/server/server.go
+internal/server/handler.go
+```
+
+Package registration remains owned by the package. A provider may delegate to
+an existing `Package(...)` registration function.
+
+## Ordering
+
+Provider order is lifecycle dependency order.
+
+Put A before B when B:
+
+- resolves A during registration;
+- requires A to be ready before B boots; or
+- must stop before A closes.
+
+Example:
+
+```text
+Configuration
+    ↓
 Database
-  ↓
-Worker
-  ↓
+    ↓
+Background Processor
+    ↓
 HTTP Server
 ```
 
-Reverse shutdown becomes:
+Shutdown is reversed.
 
-```text
-HTTP Server
-  ↓
-Worker
-  ↓
-Database
-  ↓
-Config
-```
-
-Do not rely on provider ordering to hide an undeclared business dependency.
-Preserve feature boundaries and expose dependencies through package registrations
-and application ports.
+Do not use ordering to hide undeclared architectural dependencies. Preserve the
+dependency direction defined by the project's architecture profile.
 
 ## Compose the Executable
 
-The executable is the composition root. It owns:
+The executable/composition root owns:
 
 - the `do.Injector`;
-- provider construction and ordering;
-- the OS-signal/application context;
+- top-level configuration values;
+- provider construction and order;
+- the application lifetime context / OS signals;
+- fatal runtime supervision;
 - startup error propagation;
-- the shutdown deadline.
+- shutdown deadline.
 
-Keep substantial provider implementations in their runtime packages. The
-executable should primarily construct and order them:
+Keep it thin:
 
 ```go
+injector := do.New()
+
+do.ProvideValue(injector, cfg)
+do.ProvideValue(injector, supervisor)
+
 bootstrapper := boot.NewDefaultBootstrapper(
-    do.New(),
-    config.NewProvider(...),
+    injector,
     database.NewProvider(),
     worker.NewProvider(),
     server.NewProvider(),
 )
 ```
 
-Install shutdown before calling `Register` so partial startup is cleaned up.
-Use a fresh bounded context for shutdown. When application context values should
-be retained, detach cancellation first:
+The executable should primarily configure, register, boot, supervise, and shut
+down packages/services—not implement their behavior.
+
+Install shutdown handling before `Register` so partial startup is cleaned up.
+
+Use a fresh bounded context for shutdown:
 
 ```go
 shutdownCtx, cancel := context.WithTimeout(
@@ -262,71 +325,59 @@ shutdownCtx, cancel := context.WithTimeout(
 defer cancel()
 ```
 
-Do not pass the already-canceled application context directly to graceful
-shutdown; cleanup may abort immediately.
+Do not use the already-canceled application context directly for graceful
+cleanup.
 
-Preserve startup and cleanup failures when both matter, for example with
-`errors.Join`.
-
-See [`references/boot-example.md`](references/boot-example.md) for a complete
-multi-package example.
+See [`references/boot-example.md`](references/boot-example.md).
 
 ## Testing
 
-Test each provider directly with a real `boot.Container` backed by a fresh
-injector:
+Test providers as thin lifecycle adapters with a fresh injector/container.
 
-```go
-injector := do.New()
-container := boot.NewContainer(injector)
-provider := NewProvider()
+Verify:
 
-err := provider.Register(ctx, container)
-```
+- expected dependencies are registered;
+- dependency resolution errors are surfaced;
+- `Boot` delegates startup and reports readiness failures;
+- `Shutdown` delegates cleanup and tolerates partial startup;
+- context cancellation reaches long-running services;
+- critical post-start failures are reported to supervision;
+- provider order and reverse shutdown are correct.
 
-Cover behavior owned by the provider:
-
-- registrations produced by `Register`;
-- readiness work and failures in `Boot`;
-- safe shutdown before registration or after partial initialization;
-- resource closure and returned cleanup errors;
-- context cancellation for background work;
-- unexpected post-start failure reporting when the provider owns a long-running
-  process.
-
-Avoid real listeners or external infrastructure in unit tests. Use fakes and keep
-integration tests separate.
+Test real package/service behavior in that package's own tests. Avoid duplicating
+business/technical behavior tests through the provider.
 
 ## Verification
 
 Before considering a boot change complete:
 
 - run `gofmt` on changed Go files;
-- compile the affected packages;
-- run affected provider tests;
+- compile affected packages;
+- run affected tests;
 - run `go test ./...` when practical;
-- verify new providers follow `Register -> Boot -> Shutdown`;
-- verify shutdown after partial `Register` or `Boot` failure;
-- verify provider declaration order matches dependency and reverse teardown needs;
-- for long-running providers, verify `Boot` returns promptly and `Shutdown`
-  terminates owned goroutines or resources;
-- do not claim the change works if required commands were not actually run.
+- verify `Register → Boot → Shutdown` behavior;
+- verify cleanup after partial startup failure;
+- verify long-running `Boot` methods return promptly;
+- verify critical runtime failures reach supervision;
+- verify shutdown uses a fresh bounded context;
+- do not claim commands pass unless they were actually run.
 
 ## Review Checklist
 
-- `pkg/boot` is used only for application-scoped lifecycle concerns.
-- The provider contains lifecycle orchestration, not domain/use-case logic.
-- The provider lives with, or delegates registration to, the runtime package it
-  owns.
-- A resource has exactly one shutdown owner.
-- Provider order matches registration, readiness, and reverse teardown needs.
+- Boot is used only at the executable/application composition boundary.
+- Providers are thin lifecycle/composition adapters.
+- Real behavior lives in packages/services, not providers.
+- Packages can resolve app dependencies through DI during composition without
+  retaining the injector as a runtime service locator.
+- Constructors construct; `Register` wires; `Boot` activates.
+- The application lifetime context is used for long-running services.
+- Critical post-start failures are supervised.
+- Every resource has exactly one lifecycle owner.
+- Provider order matches dependency/readiness/reverse teardown needs.
 - `Register` does not start long-running work.
-- `Boot` returns promptly and reports immediate startup failures.
-- Unexpected post-start failures are surfaced through logging or supervision.
+- `Boot` returns after readiness rather than blocking for service lifetime.
 - `Shutdown` is safe after partial startup and respects its context.
-- Startup failure triggers cleanup when resources may have been acquired.
-- Normal shutdown uses a fresh bounded context, not the canceled application
-  context.
-- Failed lifecycle phases are not retried on the same bootstrapper.
-- Lifecycle errors are wrapped and preserved.
-- Verification commands were actually executed when the environment permits it.
+- Startup failure triggers cleanup.
+- Shutdown uses a fresh bounded context.
+- Failed phases are not retried on the same bootstrapper.
+- Lifecycle errors are preserved.
