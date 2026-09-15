@@ -1,185 +1,122 @@
 # Boundary Contracts
 
-Read this reference when changing an incoming adapter, presenter, repository,
-external gateway, validation path, transaction boundary, or layer-specific
-tests.
+Read this reference when changing a transport, protocol adapter, presenter,
+persistence adapter, external gateway, validation path, or layer-specific test.
 
-The canonical package names and dependency rules come from `../SKILL.md`.
-Examples here are illustrative; do not create packages or abstractions that the
-behavior does not require.
+The universal rules and selected archetype in `../SKILL.md` remain authoritative.
 
-## End-to-End Flow
+## General Boundary Flow
+
+A transformation boundary commonly looks like:
 
 ```text
-transport request
-  -> incoming adapter parses and validates the protocol shape
-  -> incoming adapter maps request to a plain application input
-  -> incoming port or use-case handler executes business behavior
-  -> outgoing port describes required infrastructure capability
-  -> outgoing adapter maps domain/application types to infrastructure shapes
-  <- plain application output or transport-independent error
-  -> incoming adapter maps output or error to a protocol response
+external representation
+       ↓ parse / validate / map
+owned behavior or contract
+       ↓
+external capability contract
+       ↑ implemented by
+external adapter
 ```
 
-An application service may provide a stable feature facade or coordinate
-several use cases. It is optional. A small incoming adapter may call a use-case
-handler directly when the main skill permits it.
+Not every boundary requires mapping. Technical passthrough systems MAY preserve
+raw data when that is part of their semantics or performance requirements.
 
-## Transport and Presentation Boundary
+## Transport / Protocol Ownership
 
-Incoming adapters own:
+Transport or protocol boundaries may own:
 
-* HTTP, gRPC, CLI, message-consumer, or other protocol request types;
-* parsing and protocol-level validation;
-* mapping requests to application inputs;
-* mapping application outputs and errors to protocol responses;
-* serialization tags, headers, and status codes.
+- HTTP, gRPC, CLI, message, or wire request/response types;
+- serialization tags;
+- headers and status codes;
+- protocol-level validation;
+- streaming/framing semantics;
+- mapping between external and owned concepts.
 
-Application inputs and outputs are plain Go types without serialization or
-persistence tags. This keeps use cases reusable across transports and prevents
-protocol changes from propagating inward.
+Business domain/application errors SHOULD remain transport-independent and be
+mapped at the incoming boundary.
 
-```go
-// application/usecase/createorder/types.go
-type Input struct {
-	CustomerID string
-	Items      []ItemInput
-}
-
-type Output struct {
-	OrderID string
-	Total   int64
-}
-
-// adapter/incoming/httpapi/view_models.go
-type createOrderResponse struct {
-	OrderID string `json:"order_id"`
-	Total   int64  `json:"total_minor_units"`
-}
-```
-
-### Presenters
-
-A presenter is an optional incoming-adapter collaborator. Use one when response
-mapping is substantial, shared by several handlers in the same transport, or
-worth testing independently. Keep simple mapping in the handler when that is
-clearer.
-
-A presenter:
-
-* belongs under the incoming adapter;
-* maps application output or errors to transport-specific view models;
-* may format, rename, omit, or add presentation fields;
-* does not contain business logic or access repositories or external services;
-* is never passed into or invoked by domain, use-case, or application-service
-  code.
-
-Do not create documentation-only presenter interfaces. Define an interface only
-when a real consumer needs substitution.
+Technical systems may intentionally preserve protocol errors or raw responses
+when transparent proxying is part of the contract.
 
 ## Validation Ownership
 
-Validation is distributed by meaning, not centralized by mechanism.
+Place validation with the layer that owns the rule.
 
-### Domain invariants
+| Owner | Responsibility |
+| --- | --- |
+| Core/domain | Invariants intrinsic to the product concept |
+| Application/capability | Preconditions for an operation |
+| Protocol/transport | Parsing, required wire fields, framing, protocol format |
+| Configuration owner | Configuration semantics and valid combinations |
 
-Enforce conditions required for every valid domain object through constructors,
-aggregate methods, value objects, or domain policies. Invalid domain state
-should be difficult or impossible to construct.
-
-Examples include an order requiring at least one item or a money value requiring
-a valid currency.
-
-### Use-case validation
-
-Enforce operation-specific business preconditions in the use-case slice. These
-rules may depend on outgoing ports, such as checking whether a registration
-email is already in use.
-
-A `validator.go` file or validator type is optional. Prefer the smallest form
-that keeps the rule visible and testable.
-
-### Transport validation
-
-Incoming adapters reject malformed requests before calling application code:
-invalid JSON, missing protocol fields, malformed headers, or invalid wire
-formats. They also translate domain and application errors into HTTP, gRPC, CLI,
-or messaging semantics.
-
-Do not make domain or application errors carry HTTP status codes, gRPC codes, or
-transport response bodies.
+Do not introduce a dedicated validator abstraction when a constructor or method
+expresses the rule more clearly.
 
 ## Persistence Boundary
 
-Persistence models and ORM concerns stay inside their outgoing adapter.
+Persistence-specific models, ORM tags, queries, and drivers stay in the
+persistence boundary when the application benefits from isolation.
 
 ```text
-application/domain type
-        ⇅ mapper inside outgoing adapter
-persistence model with ORM tags
-        ⇅ ORM/database
+owned model / application result
+          ⇅ mapper
+persistence representation
+          ⇅
+database / ORM
 ```
 
-Repositories accept and return domain entities or application-owned result
-types at their application-facing boundary. They do not return ORM models.
+Business repositories SHOULD expose business/application-owned concepts rather
+than ORM records.
 
-For Bun, keep Bun-tagged models inside the PostgreSQL adapter, for example:
+Technical projects MAY expose lower-level storage concepts when storage is part
+of the product's core abstraction, such as a database or storage engine.
 
-```text
-adapter/outgoing/persistence/postgres/
-├── models/
-│   └── order_model.go
-├── mapper.go
-└── order_repository.go
-```
+## External SDK / API Boundary
 
-The exact filenames are optional. The invariant is that mapping is performed
-inside the adapter and no Bun model or tag leaks into domain or application
-packages. Apply the same rule to `db`, `bun`, BSON, SDK, and generated wire
-types.
+Keep vendor-specific SDK and wire concerns with the adapter that owns the
+integration.
 
-## Transaction Boundaries
+Do not create an adapter merely to hide a stable library that already provides
+the exact capability needed. Introduce a boundary when it protects meaningful
+semantics or replacement cost.
 
-The application layer decides which business operation must be atomic, but it
-must not import database or ORM transaction types.
+## Presenters
 
-When a use case spans several repository operations, expose an
-application-owned Unit of Work or transaction capability through an outgoing
-port. An outgoing persistence adapter implements it using the concrete database
-transaction.
+A presenter is optional. Use one when response mapping is substantial, reused,
+or worth testing independently.
 
-An application service may coordinate a transaction across multiple use cases
-when it is a genuine feature-level operation. Do not add an application service
-solely to hide a database transaction, and do not let transactions cross feature
-boundaries implicitly. Cross-feature workflows need explicit consistency,
-compensation, or recovery semantics.
+A presenter belongs to the incoming boundary and MUST NOT become a backchannel
+from core behavior into transport concerns.
 
-Use the specialized database skill for isolation levels, locking, retries, and
-driver-specific transaction mechanics.
+## Transactions
+
+Business applications decide atomicity at the application/business operation
+boundary without importing concrete ORM transaction types into domain behavior.
+
+Expose a transaction or unit-of-work capability only when an operation truly
+requires it.
+
+Technical systems whose product semantics are transactional may define those
+contracts closer to their core.
 
 ## Testing by Boundary
 
-Match test style to the boundary under test:
+Match test style to the boundary:
 
-| Layer | Default test style |
+| Boundary | Default style |
 | --- | --- |
-| Domain | Pure unit tests without mocks; exercise invariants, value objects, and aggregate behavior |
-| Use cases and application services | Unit tests using fakes or mocks for outgoing ports; no real transport or database |
-| Incoming adapters | Handler or driver tests using a fake incoming port or use-case handler; assert parsing, mapping, presentation, and protocol errors |
-| Outgoing adapters | Integration or contract tests against the real technology or a faithful controlled substitute |
-| Wired executable | Selective end-to-end tests through a real incoming surface |
+| Pure core behavior | Unit tests without infrastructure |
+| Capability using external contracts | Unit tests with focused fakes/mocks where useful |
+| Protocol/transport adapter | Handler/driver/contract tests |
+| External/persistence adapter | Integration or contract tests against a faithful substitute or real dependency |
+| Wired executable | Selective end-to-end tests |
 
-These are architectural test boundaries, not complete testing standards. Use
-the specialized testing skill for table-driven tests, fixtures, testcontainers,
-race testing, fuzzing, and detailed test mechanics.
+## Review Checklist
 
-## Boundary Review Checklist
-
-* [ ] Application inputs and outputs are plain, transport-independent types.
-* [ ] Serialization and persistence tags exist only in their owning adapters.
-* [ ] Incoming adapters call application boundaries, not outgoing adapters.
-* [ ] Presenters, when used, remain transport-specific and contain no business logic.
-* [ ] Domain invariants cannot be bypassed through adapter mapping.
-* [ ] Repositories expose domain or application-owned types, not ORM models.
-* [ ] Transaction semantics are expressed through an application-owned boundary.
-* [ ] Tests replace dependencies at ports rather than reaching across layers.
+- [ ] The boundary owns its external representation.
+- [ ] Mapping exists only when it protects useful semantics or compatibility.
+- [ ] Protocol/persistence/vendor details do not leak inward accidentally.
+- [ ] Validation lives with the owner of the rule.
+- [ ] Errors are translated at the appropriate boundary.
+- [ ] Tests replace dependencies at explicit boundaries rather than reaching through layers.
