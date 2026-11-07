@@ -13,7 +13,8 @@ if you always start with the reset in S0.
 ## S0 — Pre-flight + suite reset
 
 ```bash
-# Engine sanity (Docker, or Podman bridge — see Note 1)
+# Engine sanity (the ambient Docker API; set DOCKER_HOST if your container
+# runtime exposes a Docker-compatible socket on a non-default path)
 docker compose version                     # Compose v2.x
 task --list                                # docker:build/up/scale/... listed
 
@@ -22,15 +23,12 @@ task docker:down:volumes                   # removes containers, network, volume
 docker volume ls --format '{{.Name}}' | grep coordination-example   # expect: (empty)
 ```
 
-## Note 1 — when there is no Docker daemon (Podman bridge)
+## Note 1 — non-default container runtimes
 
-Podman exposes a Docker-compatible API; point the Docker CLI at it and every
-task below works unchanged:
-
-```bash
-podman system service --time=0 unix:/run/user/$(id -u)/podman/podman.sock &  # keep running
-export DOCKER_HOST=unix:///run/user/$(id -u)/podman/podman.sock
-```
+Testcontainers and the Docker CLI resolve the Docker API the same way:
+`DOCKER_HOST` (if set) wins, then the default `docker.sock`. Nothing in the
+suite or the tasks is bound to a specific engine; whichever runtime answers on
+the resolved socket runs the demo and the integration tests.
 
 ## E1 — Static verification (library + example)
 
@@ -39,11 +37,22 @@ From `pkg/coordination` (one level up):
 ```bash
 go build ./...                                   # exit 0
 go vet ./...                                     # exit 0
-go test -count=1 -race ./...                     # ok ... coordination
+go test -count=1 -race ./...                     # unit + integration backends
 golangci-lint run -c ../../.golangci.yml ./...   # 0 issues
 ```
 
 **PASS** = all four succeed.
+
+The `postgres/` package also runs **SQL integration tests** — the database comes
+from **testcontainers-go** (https://golang.testcontainers.org/), module
+`testcontainers-go/modules/postgres`:
+`COORDINATION_TEST_DATABASE_URL` wins if set; otherwise a throwaway
+`postgres:18-alpine` container is started through the ambient Docker API and
+terminated after the suite; with no reachable runtime the tests skip
+(`COORDINATION_TEST_DATABASE_URL` set but unreachable ⇒ suite fails loudly).
+
+**PASS** = `ok` for `coordination` and `postgres`; when the container path is
+used, coverage for the backend lands around **87%** (`go test -cover ./...`).
 
 ## E2 — Baseline: N replicas claim N slots (default 3)
 
@@ -104,9 +113,10 @@ docker logs "$cname" 2>&1 | grep -ic panic                                    # 
 - The rolled instance's slot row now has **`generation = before + 1`** (identity reused,
   fencing counter advanced), `state='active'`, fresh lease, new `owner_id`.
 - The rolled container shows **2** NATS starts, **0** panics (SIGTERM fully released
-  the slot; `docker stop` grace 20s ≥ StopTimeout 10s). *(Podman note: `docker logs`
-  for a manually stopped+started container shows only the new process — the DB row
-  is the source of truth for the re-claim.)*
+  the slot; `docker stop` grace 20s ≥ StopTimeout 10s). *(Engine note: some
+  container runtimes rotate `docker logs` for a manually stopped+started
+  container, showing only the new process — the DB row is the source of truth
+  for the re-claim.)*
 - Optional (nice): sample `task docker:slots` every 2s during the rollout and
   capture the intermediate `available` row before the re-claim. The re-claim race
   may be won by a surplus client-only replica — that is correct behavior; re-identify
@@ -189,14 +199,14 @@ survives `down` and is removed by `down:volumes`.
 
 ## Environment (validated reference results)
 
-Validated end-to-end with Compose v5.7.0 over the Podman rootless API bridge
-(Podman 5.8.9, Docker CLI 28.3.3) — see the report below for numbers.
+Validated end-to-end with Compose v2 (v5.7.0) against a Docker-API-compatible
+container runtime — see the report below for numbers.
 
 ## Report template (fill and ship alongside the evidence files)
 
 ```
 # EVAL report — coordination example
-Engine:          docker | podman+bridge (<compose version>, <podman version>)
+Engine:          container runtime (<compose version>, <engine version>)
 Host:            <os / kernel>
 Suite reset:     down -v before E2 (fresh DB)  [yes/no]
 

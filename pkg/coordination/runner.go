@@ -115,7 +115,6 @@ func (r Runner) renew(ctx context.Context, a Assignment, result chan<- error) {
 				case result <- fmt.Errorf("renew slot %d: %w", a.Slot, err):
 				default:
 				}
-				cancel()
 				return
 			}
 		}
