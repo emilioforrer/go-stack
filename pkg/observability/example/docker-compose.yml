@@ -1,0 +1,13 @@
+# Grafana LGTM stack: OTLP collector + Prometheus (metrics) + Tempo
+# (traces) + Loki (logs) behind a single Grafana UI.
+#
+# Start:  docker compose up -d
+# UI:     http://localhost:3000 (admin / admin)
+services:
+  lgtm:
+    image: grafana/otel-lgtm:latest
+    container_name: observability-example-lgtm
+    ports:
+      - "3000:3000" # Grafana UI
+      - "4317:4317" # OTLP gRPC
+      - "4318:4318" # OTLP HTTP

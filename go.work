@@ -8,4 +8,6 @@ use (
 	pkg/bundb
 	pkg/httpsvr
 	pkg/inertia
+	pkg/observability
+	pkg/observability/example
 )
