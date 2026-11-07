@@ -182,7 +182,7 @@ survives `down` and is removed by `down:volumes`.
 | symptom | cause | check |
 |---|---|---|
 | slot stuck `active` with expired lease, never `suspect` | cleanup sidecar dead | `docker logs coordination-example-cleanup-1` |
-| `panic: close of nil channel` (shutdownEventing) during stop | app + nats embedded SIGTERM handler racing (`Server.Start` installs it unless `opts.NoSigs`) | grep coordinator logs for `panic`; confirm `NoSigs: true` in `main.go` |
+| `panic: close of nil channel` (shutdownEventing) during stop | app + nats embedded SIGTERM handler racing (`Server.Start` installs it unless `opts.NoSigs`) | grep coordinator logs for `panic`; confirm `NoSigs: true` in `example/boot.go` |
 | nats FTL `JetStream cluster requires configured routes` | first claimant started clustered with 0 peers | confirm standalone-first behavior (`peers=0` log line, no Cluster opts) |
 | postgres refuses to start | PG 18+ expects the mount at `/var/lib/postgresql` | inspect compose `volumes` |
 | `runner: slot renew failed` warnings in app logs | lease renewals failing against the backend | backend probe (see `logs` at that moment; slots table forensics) |
