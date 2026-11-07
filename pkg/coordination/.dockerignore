@@ -1,0 +1,7 @@
+# Keep the build context to the sources that the Dockerfile needs.
+# Explicit excludes (rather than * + negation) for maximum builder
+# compatibility.
+example/coordination
+example/data
+example/coverage.out
+example/**/coverage.out

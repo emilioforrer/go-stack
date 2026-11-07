@@ -1,0 +1,116 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+
+# Docker demo for the coordination package: several replicas of the same app
+# race for logical slots (nats_slots rows) in PostgreSQL and start embedded
+# NATS servers that cluster with each other — like pods of a real rollout
+# generation. Slots, leases, generation counters and peer discovery all live
+# in the shared database, so they are directly inspectable.
+#
+# Start three replicas against three slots and follow the logs:
+#
+#   docker compose up -d --build --scale coordinator=3
+#   docker compose logs -f coordinator
+#
+# Watch the slot state machine (generation increments on every claim):
+#
+#   docker compose exec postgres psql -U coordinator -c \
+#     'SELECT slot_id, generation, state, owner_id, lease_until, route_url FROM nats_slots ORDER BY slot_id;'
+#
+# Roll out a new generation: stop one replica gracefully (SIGTERM releases
+# its slot), then scale up — whichever replica races for the free slot first
+# wins it and its generation counter increments:
+#
+#   container=$(docker compose ps -q coordinator | head -1)
+#   docker stop -t 20 "$container"
+#   docker compose up -d --scale coordinator=3
+#
+# Crash simulation: kill a replica (SIGKILL, no release). Its lease expires
+# after 30s, the cleanup sidecar quarantines the slot as 'suspect', and after
+# a 60s cooldown returns it to 'available' so the fleet self-heals. Surplus
+# replicas (more than three) meanwhile log client-only mode:
+#
+#   container=$(docker compose ps -q coordinator | head -1)
+#   docker kill "$container"
+#   docker compose up -d --scale coordinator=5
+#
+# Connect as a NATS client to the running cluster (round-robin DNS across
+# the replicas' NATS servers):
+#
+#   docker run --rm --network coordination-example_default \
+#     natsio/nats-box -s nats://coordinator:4222
+#
+# Reset everything from scratch (drops the slot state, incl. generations):
+#
+#   docker compose down -v
+
+name: coordination-example
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: coordinator
+      POSTGRES_PASSWORD: coordinator
+      POSTGRES_DB: coordinator
+    volumes:
+      # Postgres 18+ expects the single mount at /var/lib/postgresql (PGDATA
+      # is now a versioned subdirectory, see docker-library/postgres#37).
+      - postgres-data:/var/lib/postgresql
+      # Applied on first start only (while the data volume is empty).
+      - ./sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U coordinator -d coordinator"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  coordinator:
+    build:
+      # The example module replace()s ../ (pkg/coordination) because that
+      # module is unpublished, so the build context must be the parent
+      # directory (see Dockerfile).
+      context: ..
+      dockerfile: example/Dockerfile
+    image: go-stack/examples/coordination:local
+    restart: unless-stopped
+    # Every replica has its own network namespace, so the default ports
+    # (4222 client, 6222 route) never collide; POD_IP is auto-detected in
+    # the image entrypoint, making each replica advertisable to peers.
+    stop_grace_period: 20s
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://coordinator:coordinator@postgres:5432/coordinator?sslmode=disable
+      NATS_CLUSTER_NAME: app-nats
+      NATS_DATA_DIR: /data
+
+  cleanup:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGHOST: postgres
+      PGPORT: "5432"
+      PGUSER: coordinator
+      PGPASSWORD: coordinator
+      PGDATABASE: coordinator
+    entrypoint:
+      - /bin/sh
+      - -ec
+      - |
+        # Runs the backend's QuarantineExpired semantics every 10s, then
+        # recycles suspect slots after a 60s cooldown. The recycle step is
+        # DEMO-ONLY: in production, suspect slots must not be reallocated
+        # without independently verified storage fencing.
+        while :; do
+          sleep 10
+          psql -q -c "UPDATE nats_slots SET state='suspect' WHERE state IN ('starting','active') AND lease_until<=clock_timestamp();" || true
+          psql -q -c "UPDATE nats_slots SET state='available',owner_id=NULL,lease_until=NULL,route_url=NULL WHERE state='suspect' AND lease_until<=clock_timestamp()-interval '60 seconds';" || true
+        done
+
+volumes:
+  postgres-data:

@@ -1,0 +1,79 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+# Tasks for tuning and driving the coordination example (linting and tests
+# live in the coordination package Taskfile one level up). Every task runs
+# against the docker-compose.yml in this directory and must be invoked from
+# here, e.g. `task docker:up`.
+
+version: '3'
+
+tasks:
+  docker:build:
+    desc: Build the coordinator image
+    cmds:
+      - docker compose build
+    silent: true
+
+  docker:up:
+    desc: Start the stack (default 3 replicas — the number of slots)
+    vars:
+      N: '{{.N | default 3}}'
+    cmds:
+      - docker compose up -d --build --scale coordinator={{.N}}
+    silent: true
+
+  docker:scale:
+    desc: Scale the replicas (surplus replicas run client-only)
+    vars:
+      N: '{{.N | default 5}}'
+    cmds:
+      - docker compose up -d --scale coordinator={{.N}}
+    silent: true
+
+  docker:rollout:
+    desc: Gracefully restart one replica (releases then re-claims a slot, bumping its generation)
+    cmds:
+      - cid="$(docker compose ps -q coordinator | head -1)"; docker stop -t 20 "$cid"; sleep 3; docker start "$cid"
+    silent: true
+
+  docker:kill:
+    desc: Kill one replica (crashes it — lease expires, slot gets quarantined, then recycled by the cleanup sidecar after a cooldown)
+    cmds:
+      - docker kill "$(docker compose ps -q coordinator | head -1)"
+    silent: true
+
+  docker:logs:
+    desc: Follow the coordinator logs
+    cmds:
+      - docker compose logs -f coordinator
+    silent: true
+
+  docker:slots:
+    desc: Show the nats_slots state machine
+    cmds:
+      - docker compose exec postgres psql -U coordinator -c 'SELECT slot_id, generation, state, owner_id, lease_until, route_url FROM nats_slots ORDER BY slot_id;'
+    silent: true
+
+  docker:client:
+    desc: Prove the NATS cluster serves traffic (one-shot pub/sub round trip)
+    cmds:
+      - (timeout 30 docker run --rm --network coordination-example_default natsio/nats-box nats -s nats://coordinator:4222 sub demo.e2e --count 1 &) && sleep 12 && docker run --rm --network coordination-example_default natsio/nats-box nats -s nats://coordinator:4222 pub demo.e2e "hello-from-docker-demo"
+    silent: true
+
+  docker:ps:
+    desc: Show the containers
+    cmds:
+      - docker compose ps
+    silent: true
+
+  docker:down:
+    desc: Stop the stack (keeps slot state in the postgres volume)
+    cmds:
+      - docker compose down
+    silent: true
+
+  docker:down:volumes:
+    desc: Stop the stack and drop the volumes (resets slot state and generations)
+    cmds:
+      - docker compose down -v
+    silent: true
